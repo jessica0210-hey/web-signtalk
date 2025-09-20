@@ -6,10 +6,10 @@ import { firestore } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 const allColumns = [
-  { key: "hearing", label: "Hearing" },
-  { key: "nonHearing", label: "Non-hearing" },
-  { key: "active", label: "Active Users" },
-  { key: "inactive", label: "Inactive (Offline)" },
+  { key: "Hearing", label: "HEARING USERS" },
+  { key: "Non-Hearing", label: "NON-HEARING USERS" },
+  { key: "active", label: "ACTIVE USERS" },
+  { key: "inactive", label: "INACTIVE USERS" },
 ];
 
 function GenerateReports() {
@@ -38,6 +38,8 @@ function GenerateReports() {
             id: doc.id,
             name: data.name || `User ${idx + 1}`,
             email: data.email || "",
+            userType: data.userType,      // <-- add this
+    isOnline: data.isOnline,
           };
         });
         setUserData(usersArr);
@@ -59,25 +61,26 @@ function GenerateReports() {
     setOpenDropdown(null);
   };
 
-  // Render table headers
+  // --- Filtering logic for each column ---
+  const getFilteredUsers = (colKey) => {
+    switch (colKey) {
+      case "Hearing":
+        return userData.filter((u) => u.userType === "Hearing");
+      case "Non-Hearing":
+        return userData.filter((u) => u.userType === "Non-Hearing");
+      case "active":
+        return userData.filter((u) => u.isOnline === true);
+      case "inactive":
+        return userData.filter((u) => u.isOnline === false);
+      default:
+        return [];
+    }
+  };
+
+  // --- Render table headers ---
   const renderHeaders = () => (
     <tr>
-      <th
-        style={{
-          background: "#481872",
-          color: "#fff",
-          width: "60px",
-          minWidth: "60px",
-          maxWidth: "60px",
-          textAlign: "center",
-          position: "sticky",
-          left: 0,
-          zIndex: 2,
-          boxShadow: "2px 0 4px -2px #ccc"
-        }}
-      >
-        #
-      </th>
+      {/* Default list header */}
       <th
         style={{
           background: "#481872",
@@ -86,9 +89,11 @@ function GenerateReports() {
           minWidth: "400px",
           maxWidth: "400px",
           position: "relative",
+          textAlign: "left",
+          padding: "12px 18px" // Added padding
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",marginLeft:'10px' }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginLeft: '10px' }}>
           <span>LIST OF USERS</span>
           {selectedCols.length < 1 && (
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -160,6 +165,7 @@ function GenerateReports() {
           </div>
         )}
       </th>
+      {/* For each selected filter, add header */}
       {selectedCols.map((col, idx) => {
         const colDef = allColumns.find((c) => c.key === col);
         const isLast = idx === selectedCols.length - 1;
@@ -172,7 +178,9 @@ function GenerateReports() {
               width: "400px",
               minWidth: "400px",
               maxWidth: "400px",
-              position: "relative"
+              position: "relative",
+              textAlign: "left",
+              padding: "12px 18px" // Added padding
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -252,6 +260,79 @@ function GenerateReports() {
     </tr>
   );
 
+  // --- Render table body ---
+  const renderBody = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={1 + selectedCols.length} style={{ textAlign: "center", padding: "40px" }}>
+            Loading users...
+          </td>
+        </tr>
+      );
+    }
+
+    // Prepare filtered users for each selected column
+    const filteredUsersPerCol = selectedCols.map(getFilteredUsers);
+
+    // Find the max number of rows needed for each column (default + all filters)
+    const maxRows = Math.max(
+      userData.length,
+      ...filteredUsersPerCol.map(arr => arr.length),
+      0
+    );
+
+    // Render rows per user index in each column
+    return Array.from({ length: maxRows }).map((_, rowIdx) => (
+      <tr key={rowIdx}>
+        {/* Default list user */}
+        <td
+          style={{
+            background: "#fff",
+            color: "#481872",
+            width: "400px",
+            minWidth: "400px",
+            maxWidth: "400px",
+            textAlign: "left",
+            padding: "12px 18px" // Added padding
+          }}
+        >
+          {userData[rowIdx] ? (
+            <div>
+              <div><b>{rowIdx + 1}.</b> {userData[rowIdx].name}</div>
+              <div style={{ fontSize: "13px" }}>{userData[rowIdx].email}</div>
+            </div>
+          ) : null}
+        </td>
+        {/* For each selected filter, add user */}
+        {selectedCols.map((col, colIdx) => {
+          const users = filteredUsersPerCol[colIdx];
+          return (
+            <td
+              key={col}
+              style={{
+                background: "#fff",
+                color: "#481872",
+                width: "400px",
+                minWidth: "400px",
+                maxWidth: "400px",
+                textAlign: "left",
+                padding: "12px 18px" // Added padding
+              }}
+            >
+              {users[rowIdx] ? (
+                <div>
+                  <div><b>{rowIdx + 1}.</b> {users[rowIdx].name}</div>
+                  <div style={{ fontSize: "13px" }}>{users[rowIdx].email}</div>
+                </div>
+              ) : null}
+            </td>
+          );
+        })}
+      </tr>
+    ));
+  };
+
   const tableWidth = Math.min(60 + (1 + selectedCols.length) * 400, 100);
 
   return (
@@ -276,8 +357,8 @@ function GenerateReports() {
             cellPadding="8"
             cellSpacing="0"
             style={{
-              minWidth: `${tableWidth}px`,
-              width: `${tableWidth}px`,
+              minWidth: "100px",
+              width: "100%",
               maxWidth: "1600px",
               borderCollapse: "collapse",
               tableLayout: "fixed",
@@ -285,69 +366,7 @@ function GenerateReports() {
             }}
           >
             <thead>{renderHeaders()}</thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={2 + selectedCols.length} style={{ textAlign: "center", padding: "40px" }}>
-                    Loading users...
-                  </td>
-                </tr>
-              ) : userData.length > 0 ? (
-                userData.map((user, idx) => (
-                  <tr key={user.id}>
-                    <td
-                      style={{
-                        background: "#fff",
-                        color: "#481872",
-                        textAlign: "center",
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        boxShadow: "2px 0 4px -2px #ccc",
-                        width: "60px",
-                        minWidth: "60px",
-                        maxWidth: "60px"
-                      }}
-                    >
-                      {idx + 1}
-                    </td>
-                    <td
-                      style={{
-                        background: "#fff",
-                        color: "#481872",
-                        width: "400px",
-                        minWidth: "400px",
-                        maxWidth: "400px"
-                      }}
-                    >
-                      <div>{user.name}</div>
-                      <div>{user.email}</div>
-                    </td>
-                    {selectedCols.map((col) => (
-                      <td
-                        key={col}
-                        style={{
-                          background: "#fff",
-                          color: "#481872",
-                          width: "400px",
-                          minWidth: "400px",
-                          maxWidth: "400px"
-                        }}
-                      >
-                        {/* You can add more user info here based on col */}
-                        {user.name}
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={2 + selectedCols.length} style={{ textAlign: "center", padding: "40px" }}>
-                    No users found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
+            <tbody>{renderBody()}</tbody>
           </table>
         </div>
       </div>

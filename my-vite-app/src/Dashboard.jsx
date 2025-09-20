@@ -75,7 +75,7 @@ function Dashboard() {
   const iconStyle = {
     width: '150px',
     height: 'auto',
-    marginBottom: '10px'
+    marginBottom: '10px',
   };
 
   const statusContainerStyle = {

@@ -171,6 +171,7 @@ function DashboardPage() {
   }, [isPopupOpen]);
 
   // --- styles ---
+
   const headerStyle = { fontSize: '28px', margin: 0 };
   const statsContainerStyle = {
     width: '1800px',
@@ -245,7 +246,7 @@ function DashboardPage() {
         fontSize: '32px',
         border: 'none',
         lineHeight: ' 86px',
-        letterSpacing: '2px'
+        letterSpacing: '2px',
       }
     : {
         background: `url(${inactiveBtn})`, // Red for inactive
