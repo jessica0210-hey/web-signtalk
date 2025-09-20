@@ -13,6 +13,28 @@ const allColumns = [
 ];
 
 function GenerateReports() {
+  // Print only the visible table
+  const [printRefresh, setPrintRefresh] = useState(false);
+  const handlePrint = () => {
+    if (!tableContainerRef.current) return;
+    const tableHTML = tableContainerRef.current.innerHTML;
+    const printWindow = window.open('', '', 'width=1200,height=800');
+        printWindow.document.write(
+          '<!DOCTYPE html><html><head><title>Print Table</title><style>' +
+          '@page { size: landscape; margin: 0; }' +
+          '@media print { body { margin: 0; padding: 0; zoom: 0.9; } .print-table-wrapper { overflow-x: visible; width: 100vw; } table { width: 100vw !important; min-width: unset !important; table-layout: fixed !important; box-sizing: border-box !important; } th, td { border: 1px solid #ccc; padding: 1px; font-size: 8px; word-break: break-word; } .print-user-name { font-size: 12px !important; font-weight: bold; } th.print-header, .print-header { font-size: 14px !important; font-weight: bold; } th { background: #481872; color: #fff; } } ' +
+          'body { font-family: Arial, sans-serif; margin: 0; padding: 2px; zoom: 0.9; } .print-table-wrapper { overflow-x: visible; width: 100vw; } table { width: 100vw !important; min-width: unset !important; table-layout: fixed !important; box-sizing: border-box !important; } th, td { border: 1px solid #ccc; padding: 1px; font-size: 8px; word-break: break-word; } .print-user-name { font-size: 12px !important; font-weight: bold; } th.print-header, .print-header { font-size: 14px !important; font-weight: bold; } th { background: #481872; color: #fff; }' +
+          '</style></head><body><div class="print-table-wrapper">' +
+          tableHTML +
+          '</div></body></html>'
+        );
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    setOpenDropdown(null);
+    setPrintRefresh((prev) => !prev); // force re-render
+  };
   const [selectedCols, setSelectedCols] = useState([]);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [userData, setUserData] = useState([]);
@@ -85,18 +107,18 @@ function GenerateReports() {
         style={{
           background: "#481872",
           color: "#fff",
-          width: "400px",
-          minWidth: "400px",
-          maxWidth: "400px",
+          width: "320px",
+          minWidth: "320px",
+          maxWidth: "320px",
           position: "relative",
           textAlign: "left",
           padding: "12px 18px" // Added padding
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginLeft: '10px' }}>
-          <span>LIST OF USERS</span>
-          {selectedCols.length < 1 && (
-            <div style={{ display: "flex", alignItems: "center" }}>
+          <span className="print-header">LIST OF USERS</span>
+          {selectedCols.length === 0 && (
+                <div style={{ display: "flex", alignItems: "center", opacity: 1, visibility: "visible" }}>
               <button
                 onClick={() => setOpenDropdown("users")}
                 style={{
@@ -116,6 +138,7 @@ function GenerateReports() {
                 />
               </button>
               <button
+                onClick={handlePrint}
                 style={{
                   background: "transparent",
                   border: "none",
@@ -125,7 +148,7 @@ function GenerateReports() {
               >
                 <img
                   src={generateReport}
-                  alt="generate"
+                  alt="print"
                   width="32"
                   height="32"
                   style={{ verticalAlign: "middle" }}
@@ -134,7 +157,7 @@ function GenerateReports() {
             </div>
           )}
         </div>
-        {openDropdown === "users" && (
+        {selectedCols.length === 0 && openDropdown === "users" && (
           <div
             style={{
               position: "absolute",
@@ -172,12 +195,13 @@ function GenerateReports() {
         return (
           <th
             key={col}
+            className="print-header"
             style={{
               background: "#481872",
               color: "#fff",
-              width: "400px",
-              minWidth: "400px",
-              maxWidth: "400px",
+              width: "320px",
+              minWidth: "320px",
+              maxWidth: "320px",
               position: "relative",
               textAlign: "left",
               padding: "12px 18px" // Added padding
@@ -186,7 +210,7 @@ function GenerateReports() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span>{colDef.label}</span>
               {isLast && (
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", visibility: "visible" }}>
                   <button
                     onClick={() => setOpenDropdown(col)}
                     style={{
@@ -202,10 +226,11 @@ function GenerateReports() {
                       alt="dropdown"
                       width="32"
                       height="32"
-                      style={{ verticalAlign: "middle" }}
+                      style={{ verticalAlign: "middle", opacity: 1, visibility: "visible", display: "inline-block" }}
                     />
                   </button>
                   <button
+                    onClick={handlePrint}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -215,16 +240,17 @@ function GenerateReports() {
                   >
                     <img
                       src={generateReport}
-                      alt="generate"
+                      alt="print"
                       width="32"
                       height="32"
-                      style={{ verticalAlign: "middle" }}
+                      style={{ verticalAlign: "middle", opacity: 1, visibility: "visible", display: "inline-block" }}
                     />
                   </button>
                 </div>
               )}
             </div>
-            {openDropdown === col && (
+            {/* Only the dropdown menu is conditional */}
+            {isLast && openDropdown === col && (
               <div
                 style={{
                   position: "absolute",
@@ -290,16 +316,16 @@ function GenerateReports() {
           style={{
             background: "#fff",
             color: "#481872",
-            width: "400px",
-            minWidth: "400px",
-            maxWidth: "400px",
+            width: "320px",
+            minWidth: "320px",
+            maxWidth: "320px",
             textAlign: "left",
             padding: "12px 18px" // Added padding
           }}
         >
           {userData[rowIdx] ? (
             <div>
-              <div><b>{rowIdx + 1}.</b> {userData[rowIdx].name}</div>
+              <div className="print-user-name"><b>{rowIdx + 1}.</b> {userData[rowIdx].name}</div>
               <div style={{ fontSize: "13px" }}>{userData[rowIdx].email}</div>
             </div>
           ) : null}
@@ -313,16 +339,16 @@ function GenerateReports() {
               style={{
                 background: "#fff",
                 color: "#481872",
-                width: "400px",
-                minWidth: "400px",
-                maxWidth: "400px",
+                width: "320px",
+                minWidth: "320px",
+                maxWidth: "320px",
                 textAlign: "left",
                 padding: "12px 18px" // Added padding
               }}
             >
               {users[rowIdx] ? (
                 <div>
-                  <div><b>{rowIdx + 1}.</b> {users[rowIdx].name}</div>
+                  <div className="print-user-name"><b>{rowIdx + 1}.</b> {users[rowIdx].name}</div>
                   <div style={{ fontSize: "13px" }}>{users[rowIdx].email}</div>
                 </div>
               ) : null}
@@ -333,7 +359,7 @@ function GenerateReports() {
     ));
   };
 
-  const tableWidth = Math.min(60 + (1 + selectedCols.length) * 400, 100);
+  const tableWidth = Math.min(60 + (1 + selectedCols.length) * 320, 100);
 
   return (
     <AdminLayout title="Generate Report">
