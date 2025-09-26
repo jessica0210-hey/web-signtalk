@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
 
@@ -21,6 +22,7 @@ const analytics = getAnalytics(app);
 
 // para makuha yung laman ng firestore
 const firestore = getFirestore(app);
+const storage = getStorage(app);
 const auth = getAuth(app);
 
-export { app, analytics, firestore, auth };
+export { app, analytics, firestore, auth, storage };
