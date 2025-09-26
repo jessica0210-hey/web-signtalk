@@ -10,11 +10,11 @@ import feedbackIcon from './assets/feedbackIcon.png';
 import dialogImg from './assets/dialogImg.png'; 
 import inactiveBtn from './assets/inactiveBtn.png'; 
 import activeBtn from './assets/activeBtn.png'; 
+import usersIcon from './assets/usersIcon.png';
 import { firestore, auth } from './firebase';
 import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
-// AnimatedNumber component
 function AnimatedNumber({ value, duration = 300 }) {
   const [display, setDisplay] = useState(0);
 
@@ -37,7 +37,6 @@ function AnimatedNumber({ value, duration = 300 }) {
       }
     }
     requestAnimationFrame(animateNumber);
-    // Cleanup
     return () => setDisplay(end);
   }, [value, duration]);
 
@@ -53,7 +52,6 @@ function DashboardPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // User stats
   const [totalUsers, setTotalUsers] = useState(0);
   const [hearingUsers, setHearingUsers] = useState(0);
   const [nonHearingUsers, setNonHearingUsers] = useState(0);
@@ -79,12 +77,10 @@ function DashboardPage() {
     fetchStatus();
   }, []);
 
-  // Fetch user stats
   useEffect(() => {
     const fetchUserStats = async () => {
       setLoading(true);
       try {
-        // Get all users from Firestore 'users' collection
         const usersRef = collection(firestore, 'users');
         const snapshot = await getDocs(usersRef);
         let hearing = 0;
@@ -132,11 +128,9 @@ function DashboardPage() {
         setLoading(false);
         return;
       }
-      // Re-authenticate using Firebase Auth
       const credential = EmailAuthProvider.credential(currentUser.email, password);
       await reauthenticateWithCredential(currentUser, credential);
 
-      // If successful, update system status
       const statusDocRef = doc(firestore, 'system status', '04N5OCS28bovQuovDRIS');
       await updateDoc(statusDocRef, { isActive: !isActive });
       setIsActive(!isActive);
@@ -197,42 +191,62 @@ function DashboardPage() {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'stretch',
-    height: '380px',
+    height: '380px', 
     width: '1800px'
   };
+
+  const dashboardGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gridTemplateRows: 'repeat(2, 1fr)',
+    gap: '20px',
+    width: '70%',     
+    height: '100%'
+  };
+
   const dashboardBtnStyle = {
-    width: '35%',
     backgroundImage: `url(${dashboardBtn})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    borderRadius: '12px',
+    borderRadius: '16px',
     padding: '20px',
     color: 'white',
     textAlign: 'center',
     cursor: 'pointer',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',    
+    alignItems: 'center',
     justifyContent: 'center',
-    border: '1px solid white'
+    gap: '40px',
+    border: '1px solid white',
+    width: '100%',      
+    height: '180px'   
   };
+
   const systemStatBgStyle = {
-    width: '70%',
+    width: '45%',
+    height: '100%',
     backgroundImage: `url(${systemStatBg})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    borderRadius: '12px',
+    borderRadius: '16px',
     padding: '20px',
     color: 'white',
     position: 'relative',
-    border: '1px solid white'
+    border: '1px solid white',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center'
   };
-  const btnIconStyle = { width: '120px', height: '150px', margin: '0 auto 20px auto' };
-  const btnTextStyle = { fontSize: '28px', margin: 0 };
 
-  // Button style changes based on isActive
+  const btnIconStyle = { width: '110px', height: '120px', margin: '0' };
+  const btnTextStyle = { fontSize: '34px', margin: 0 };
+
+
   const activeBtnStyle = isActive
     ? {
-        backgroundImage:`url(${activeBtn})`, // Green for active
+        backgroundImage:`url(${activeBtn})`, 
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
@@ -241,7 +255,7 @@ function DashboardPage() {
         display: 'inline-block',
         marginTop: '20px',
         width: '400px',
-        height: '125px',
+        height: '130px',
         textAlign: 'center',
         fontSize: '32px',
         border: 'none',
@@ -249,7 +263,7 @@ function DashboardPage() {
         letterSpacing: '2px',
       }
     : {
-        background: `url(${inactiveBtn})`, // Red for inactive
+        background: `url(${inactiveBtn})`,
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
@@ -258,7 +272,7 @@ function DashboardPage() {
         display: 'inline-block',
         marginTop: '20px',
         width: '400px',
-        height: '125px',
+        height: '130px',
         textAlign: 'center',
         fontSize: '32px',
         border: 'none',
@@ -332,7 +346,7 @@ function DashboardPage() {
         {/* First row: Labels */}
         <div style={rowStyle}>
           <div style={colStyle}><p style={labelStyle}>Total No. of Users</p></div>
-          <div style={colStyle}><p style={labelStyle}>Hearing Users</p></div>
+          <div style={colStyle}><p style={labelStyle}>Hearinnng Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Non-Hearing Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Inactive (Offline) Users</p></div>
           <div style={colEndStyle}><p style={labelStyle}>Active Users</p></div>
@@ -350,17 +364,24 @@ function DashboardPage() {
 
       {/* Lower Section */}
       <div style={lowerSectionStyle}>
-        <div style={dashboardBtnStyle} onClick={() => navigate('/generatereport')}>
-          <img src={reportIcon} alt="Report" style={btnIconStyle} />
-          <p style={btnTextStyle}>Generate Report</p>
-        </div>
-        <div style={dashboardBtnStyle} onClick={() => navigate('/datasets')}>
-          <img src={datasetIcon} alt="Data Sets" style={btnIconStyle} />
-          <p style={btnTextStyle}>Data Sets</p>
-        </div>
-        <div style={dashboardBtnStyle} onClick={() => navigate('/feedback')}>
-          <img src={feedbackIcon} alt="Feedback" style={btnIconStyle} />
-          <p style={btnTextStyle}>Feedback</p>
+        {/* 2x2 grid for dashboard buttons */}
+        <div style={dashboardGridStyle}>
+          <div style={dashboardBtnStyle} onClick={() => navigate('/generatereport')}>
+            <img src={reportIcon} alt="Reports" style={btnIconStyle} />
+            <p style={btnTextStyle}>Reports</p>
+          </div>
+          <div style={dashboardBtnStyle} onClick={() => navigate('/userManagement')}>
+            <img src={usersIcon} alt="Users" style={btnIconStyle} />
+            <p style={btnTextStyle}>Users</p>
+          </div>
+          <div style={dashboardBtnStyle} onClick={() => navigate('/datasets')}>
+            <img src={datasetIcon} alt="Data Sets" style={btnIconStyle} />
+            <p style={btnTextStyle}>Data Sets</p>
+          </div>
+          <div style={dashboardBtnStyle} onClick={() => navigate('/feedback')}>
+            <img src={feedbackIcon} alt="Feedback" style={btnIconStyle} />
+            <p style={btnTextStyle}>Feedback</p>
+          </div>
         </div>
         {/* System Status */}
         <div style={systemStatBgStyle}>
@@ -415,7 +436,6 @@ function DashboardPage() {
               </>
             )}
 
-            {/* 🔹 Wrap input + buttons in a form */}
             <form
               onSubmit={(e) => {
                 e.preventDefault();

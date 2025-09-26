@@ -14,7 +14,7 @@ const allColumns = [
 
 function GenerateReports() {
   // Print only the visible table
-  const [printRefresh, setPrintRefresh] = useState(false);
+  const [, setPrintRefresh] = useState(false);
   const handlePrint = () => {
     if (!tableContainerRef.current) return;
     const tableHTML = tableContainerRef.current.innerHTML;
@@ -358,8 +358,6 @@ function GenerateReports() {
       </tr>
     ));
   };
-
-  const tableWidth = Math.min(60 + (1 + selectedCols.length) * 320, 100);
 
   return (
     <AdminLayout title="Generate Report">

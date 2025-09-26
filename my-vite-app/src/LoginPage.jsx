@@ -8,6 +8,7 @@ import Feedback from './Feedback';
 import GenerateReport from './GenerateReport';
 import Datasets from './Datasets';
 import ForgotPass from './ForgotPass';
+import UserManagement from './UserManagement';
 import { auth, firestore } from './firebase';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -238,6 +239,7 @@ function App() {
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/datasets" element={<Datasets />} />
         <Route path="/forgotpass" element={<ForgotPass />} />
+        <Route path="/userManagement" element={<UserManagement />} />
       </Routes>
     </Router>
   );

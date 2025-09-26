@@ -63,3 +63,7 @@ input[type="submit"] {
   font-size: 20px;
   cursor: pointer;
 }
+.searchInput::placeholder {
+  color: #ffffff;   
+  opacity: 0.6;     
+}

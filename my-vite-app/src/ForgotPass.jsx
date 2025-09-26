@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // <-- Add this import
 import bgImage from './assets/background.png'; 
 import logo from './assets/signtalk_logo.png'; 
 import './index.css';
@@ -6,10 +7,19 @@ import './index.css';
 function LoginWrapper() {
   const [email, setEmail] = useState('');
   const [showPopup, setShowPopup] = useState(false);
+  const navigate = useNavigate(); // <-- Add this line
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setShowPopup(true);
+  };
+
+  const handleLogoClick = () => {
+    navigate('/'); // <-- Go to login page
+  };
+
+  const handleOkClick = () => {
+    navigate('/'); // <-- Go to login page
   };
 
   const bgStyle = {
@@ -91,7 +101,7 @@ function LoginWrapper() {
 
   return (
     <div style={bgStyle}>
-      <img src={logo} alt="SignTalk Logo" className="logo" />
+      <img src={logo} alt="SignTalk Logo" className="logo" style={{cursor: 'pointer'}} onClick={handleLogoClick} />
       <p>FORGOT PASSWORD</p>
       <form onSubmit={handleSubmit}>
         <label htmlFor="email">Email</label>
@@ -113,7 +123,7 @@ function LoginWrapper() {
             <div style={popupBodyStyle}>
               <div>Check your email for password reset instructions.</div>
               <div style={okBtnContainerStyle}>
-                <button style={okBtnStyle} onClick={() => setShowPopup(false)}>
+                <button style={okBtnStyle} onClick={handleOkClick}>
                   OK
                 </button>
               </div>
