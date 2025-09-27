@@ -1,29 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from './components/AdminLayout';
 import searchIcon from './assets/search-icon.png';
+import { firestore } from './firebase';
+import { collection, getDocs } from 'firebase/firestore';
 import './index.css';
 
 function UserManagement() {
   const [activeTab, setActiveTab] = useState("users");
+  const [users, setUsers] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const users = [
-    { id: 'user000293', email: 'sign@talk.com', name: 'Maricris Alcanar' },
-    { id: 'user000294', email: 'sign@talk.com', name: 'Jamila Chan' },
-    { id: 'user000295', email: 'sign@talk.com', name: 'Jessica Chan' },
-    { id: 'user000296', email: 'sign@talk.com', name: 'Dave Chan' },
-    { id: 'user000297', email: 'sign@talk.com', name: 'Dave Chan' },
-    { id: 'user000298', email: 'sign@talk.com', name: 'Dave Chan' },
-    { id: 'user000299', email: 'sign@talk.com', name: 'Dave Chan' },
-  ];
-
-  const admins = [
-    { id: 'admin0001', email: 'admin@talk.com' },
-    { id: 'admin0002', email: 'admin@talk.com' },
-  ];
+  // Fetch users from Firebase
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const usersRef = collection(firestore, "users");
+        const snapshot = await getDocs(usersRef);
+        const usersArr = snapshot.docs.map((doc, idx) => {
+          const data = doc.data();
+          return {
+            id: data.uid || doc.id,
+            name: data.name || `User ${idx + 1}`,
+            email: data.email || '',
+            userType: data.userType,
+            isOnline: data.isOnline
+          };
+        });
+        
+        // Separate users and admins based on userType field
+        const regularUsers = usersArr.filter(user => user.userType !== 'admin');
+        const adminUsers = usersArr.filter(user => user.userType === 'admin');
+        
+        setUsers(regularUsers);
+        setAdmins(adminUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]);
+        setAdmins([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const handleSearch = () => {
-    // search logic
+    // Search functionality can be implemented here
+    // For now, we'll just log the search term
+    console.log('Searching for:', searchTerm);
   };
+
+  // Filter users based on search term
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAdmins = admins.filter(admin => 
+    admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <AdminLayout title="USER MANAGEMENT">
@@ -58,6 +99,8 @@ function UserManagement() {
               placeholder="Search..."
               className="searchInput"
               style={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
             <button style={styles.searchBtn} onClick={handleSearch}>
@@ -84,17 +127,35 @@ function UserManagement() {
           <div style={styles.tbodyContainer}>
             <table style={styles.table}>
               <tbody>
-                {(activeTab === "users" ? users : admins).map((item, i) => (
-                  <tr key={i} style={styles.row}>
-                    <td style={{ ...styles.td, borderTopLeftRadius: "10px", borderBottomLeftRadius: "10px"}}>{item.id}</td>
-                    <td style={styles.td}>{item.email}</td>
-                    {activeTab === "users" && <td style={styles.td}>{item.name}</td>}
-                    <td style={{ ...styles.td, borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
-                      <button style={styles.resetBtn}>Reset Password</button>
-                      <button style={styles.deleteBtn}>Delete Account</button>
+                {loading ? (
+                  <tr style={styles.row}>
+                    <td colSpan={activeTab === "users" ? 4 : 3} style={{ ...styles.td, textAlign: 'center', padding: '40px' }}>
+                      Loading users...
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  (activeTab === "users" ? filteredUsers : filteredAdmins).length === 0 ? (
+                    <tr style={styles.row}>
+                      <td colSpan={activeTab === "users" ? 4 : 3} style={{ ...styles.td, textAlign: 'center', padding: '40px' }}>
+                        {searchTerm ? 'No users found matching your search.' : 'No users found.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    (activeTab === "users" ? filteredUsers : filteredAdmins).map((item, i) => (
+                      <tr key={item.id} style={styles.row}>
+                        <td style={{ ...styles.td, borderTopLeftRadius: "10px", borderBottomLeftRadius: "10px"}}>
+                          {item.id}
+                        </td>
+                        <td style={styles.td}>{item.email}</td>
+                        {activeTab === "users" && <td style={styles.td}>{item.name}</td>}
+                        <td style={{ ...styles.td, borderTopRightRadius: "10px", borderBottomRightRadius: "10px" }}>
+                          <button style={styles.resetBtn}>Reset Password</button>
+                          <button style={styles.deleteBtn}>Delete Account</button>
+                        </td>
+                      </tr>
+                    ))
+                  )
+                )}
               </tbody>
             </table>
           </div>

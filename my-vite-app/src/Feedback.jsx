@@ -272,7 +272,7 @@ function Feedback() {
                 <tr>
                   <td>${index + 1}</td>
                   <td>${item.date.replace('\n', '<br>')}</td>
-                  <td>${1001 + index}</td>
+                  <td>${item.userId || 'N/A'}</td>
                   <td>${item.message}</td>
                 </tr>
               `).join('')}
@@ -302,10 +302,14 @@ function Feedback() {
             });
             
             setTimeout(function() {
+              // Trigger print dialog
               window.print();
-              window.onafterprint = function() {
+              
+              // Close popup window immediately after print dialog opens
+              // The print dialog will remain open for the user
+              setTimeout(function() {
                 window.close();
-              };
+              }, 100);
             }, 500);
           };
         </script>
@@ -396,7 +400,7 @@ function Feedback() {
                     </div>
                   </div>
                   <div style={{ ...styles.col, ...styles.colUser }}>
-                    {1001 + index}
+                    {item.userId || 'N/A'}
                   </div>
                   <div style={{ ...styles.col, ...styles.colMessage }}>{item.message}</div>
                 </div>

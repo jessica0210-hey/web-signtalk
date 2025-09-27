@@ -482,28 +482,7 @@ function DashboardPage() {
         letterSpacing: '2px'
       };
 
-  const popupOverlay = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000
-  };
 
-  const popupContent = {
-    width: '460px',
-    padding: '20px',
-    borderRadius: '30px',
-    background: '#fff',
-    textAlign: 'center',
-    position: 'relative',
-    color:"#481872"
-  };
 
   // Loading spinner style
   const spinnerOverlayStyle = {
@@ -532,6 +511,17 @@ function DashboardPage() {
     @keyframes spin {
       0% { transform: rotate(0deg);}
       100% { transform: rotate(360deg);}
+    }
+    
+    @keyframes scaleInModal {
+      from {
+        transform: scale(0.7);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
   `;
 
@@ -644,8 +634,30 @@ function DashboardPage() {
       </div>
 
       {isPopupOpen && (
-        <div style={popupOverlay}>
-          <div style={popupContent}>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            minWidth: '400px',
+            maxWidth: '500px',
+            animation: 'scaleInModal 0.3s ease-out',
+            transform: 'scale(1)',
+            textAlign: 'center',
+            color: '#481872'
+          }}>
             <img 
               src={dialogImg} 
               alt="Dialog Illustration" 
@@ -734,25 +746,26 @@ function DashboardPage() {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(72, 24, 114, 0.8)',
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
           zIndex: 1002
         }}>
           <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '20px',
+            backgroundColor: 'white',
             padding: '40px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             width: '600px',
             maxHeight: '80vh',
             overflowY: 'auto',
             textAlign: 'center',
             position: 'relative',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-            border: '3px solid #481872'
+            animation: 'scaleInModal 0.3s ease-out',
+            transform: 'scale(1)'
           }}>
             {/* Close button */}
             <button
