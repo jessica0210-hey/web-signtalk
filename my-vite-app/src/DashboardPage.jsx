@@ -43,6 +43,192 @@ function AnimatedNumber({ value, duration = 300 }) {
   return <span>{display}</span>;
 }
 
+// UserStatsChart component for the popup
+function UserStatsChart({ userType, totalUsers, hearingUsers, nonHearingUsers, activeUsers, inactiveUsers }) {
+  const [animationDelay, setAnimationDelay] = useState(0);
+
+  const getUserTypeInfo = () => {
+    switch(userType) {
+      case 'total':
+        return {
+          title: 'Total Users',
+          value: totalUsers,
+          color: '#481872',
+          description: 'All registered users in the system'
+        };
+      case 'hearing':
+        return {
+          title: 'Hearing Users',
+          value: hearingUsers,
+          color: '#6D2593',
+          description: 'Users who can hear normally'
+        };
+      case 'nonhearing':
+        return {
+          title: 'Non-Hearing Users',
+          value: nonHearingUsers,
+          color: '#9B59B6',
+          description: 'Users with hearing impairments'
+        };
+      case 'active':
+        return {
+          title: 'Active Users',
+          value: activeUsers,
+          color: '#27AE60',
+          description: 'Currently active users'
+        };
+      case 'inactive':
+        return {
+          title: 'Inactive Users',
+          value: inactiveUsers,
+          color: '#E74C3C',
+          description: 'Currently inactive users'
+        };
+      default:
+        return {
+          title: 'Users',
+          value: 0,
+          color: '#481872',
+          description: ''
+        };
+    }
+  };
+
+  const info = getUserTypeInfo();
+
+  // Trigger animation when component mounts
+  useEffect(() => {
+    setAnimationDelay(Date.now());
+  }, []);
+
+  // Calculate percentage for progress bar
+  const percentage = totalUsers > 0 ? (info.value / totalUsers * 100) : 0;
+
+  return (
+    <div style={{ padding: '20px' }}>
+      <h2 style={{ 
+        color: info.color, 
+        marginBottom: '10px',
+        fontSize: '32px',
+        fontWeight: 'bold'
+      }}>
+        {info.title}
+      </h2>
+      
+      <p style={{ 
+        color: '#666', 
+        marginBottom: '30px',
+        fontSize: '16px'
+      }}>
+        {info.description}
+      </p>
+
+      {/* Animated Circle Chart */}
+      <div style={{ 
+        margin: '30px auto',
+        position: 'relative',
+        width: '200px',
+        height: '200px'
+      }}>
+        <svg width="200" height="200" style={{ transform: 'rotate(-90deg)' }}>
+          {/* Background circle */}
+          <circle
+            cx="100"
+            cy="100"
+            r="80"
+            fill="none"
+            stroke="#f0f0f0"
+            strokeWidth="20"
+          />
+          {/* Animated progress circle */}
+          <circle
+            cx="100"
+            cy="100"
+            r="80"
+            fill="none"
+            stroke={info.color}
+            strokeWidth="20"
+            strokeLinecap="round"
+            strokeDasharray={`${2 * Math.PI * 80}`}
+            strokeDashoffset={animationDelay ? `${2 * Math.PI * 80 * (1 - percentage / 100)}` : `${2 * Math.PI * 80}`}
+            style={{
+              transition: 'stroke-dashoffset 2s ease-in-out 0.3s'
+            }}
+          />
+        </svg>
+        
+        {/* Center number */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          fontSize: '36px',
+          fontWeight: 'bold',
+          color: info.color
+        }}>
+          {info.value}
+        </div>
+      </div>
+
+      {/* Percentage display */}
+      <div style={{ 
+        marginTop: '20px',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        <strong>{percentage.toFixed(1)}%</strong> of total users
+      </div>
+
+      {/* Stats bar */}
+      <div style={{
+        marginTop: '30px',
+        backgroundColor: '#f5f5f5',
+        borderRadius: '10px',
+        height: '10px',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          backgroundColor: info.color,
+          height: '100%',
+          width: animationDelay ? `${percentage}%` : '0%',
+          borderRadius: '10px',
+          transition: 'width 2s ease-in-out 0.5s'
+        }} />
+      </div>
+
+      {/* Additional info */}
+      <div style={{
+        marginTop: '30px',
+        padding: '20px',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '10px',
+        border: `2px solid ${info.color}`
+      }}>
+        <h3 style={{ color: info.color, marginBottom: '15px' }}>Quick Stats</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+          <div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#27AE60' }}>{activeUsers}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Active</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#E74C3C' }}>{inactiveUsers}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Inactive</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#6D2593' }}>{hearingUsers}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Hearing</div>
+          </div>
+          <div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#9B59B6' }}>{nonHearingUsers}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Non-Hearing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DashboardPage() {
   const navigate = useNavigate();
 
@@ -57,6 +243,10 @@ function DashboardPage() {
   const [nonHearingUsers, setNonHearingUsers] = useState(0);
   const [inactiveUsers, setInactiveUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
+  
+  // New states for user statistics popup
+  const [isUserStatsPopupOpen, setIsUserStatsPopupOpen] = useState(false);
+  const [selectedUserType, setSelectedUserType] = useState('');
 
   // Fetch system status from Firestore on mount
   useEffect(() => {
@@ -150,19 +340,31 @@ function DashboardPage() {
     setError('');
   };
 
+  // Handle clicks on user numbers
+  const handleUserNumberClick = (userType) => {
+    setSelectedUserType(userType);
+    setIsUserStatsPopupOpen(true);
+  };
+
+  const handleCloseUserStatsPopup = () => {
+    setIsUserStatsPopupOpen(false);
+    setSelectedUserType('');
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         handleCancel();
+        handleCloseUserStatsPopup();
       }
     };
-    if (isPopupOpen) {
+    if (isPopupOpen || isUserStatsPopupOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isPopupOpen]);
+  }, [isPopupOpen, isUserStatsPopupOpen]);
 
   // --- styles ---
 
@@ -346,7 +548,7 @@ function DashboardPage() {
         {/* First row: Labels */}
         <div style={rowStyle}>
           <div style={colStyle}><p style={labelStyle}>Total No. of Users</p></div>
-          <div style={colStyle}><p style={labelStyle}>Hearinnng Users</p></div>
+          <div style={colStyle}><p style={labelStyle}>Hearing Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Non-Hearing Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Inactive (Offline) Users</p></div>
           <div style={colEndStyle}><p style={labelStyle}>Active Users</p></div>
@@ -354,11 +556,46 @@ function DashboardPage() {
 
         {/* Second row: Numbers */}
         <div style={rowStyle}>
-          <div style={colStyle}><p style={numberStyle}><AnimatedNumber value={totalUsers} /></p></div>
-          <div style={colStyle}><p style={numberStyle}><AnimatedNumber value={hearingUsers} /></p></div>
-          <div style={colStyle}><p style={numberStyle}><AnimatedNumber value={nonHearingUsers} /></p></div>
-          <div style={colStyle}><p style={numberStyle}><AnimatedNumber value={inactiveUsers} /></p></div>
-          <div style={colEndStyle}><p style={numberStyle}><AnimatedNumber value={activeUsers} /></p></div>
+          <div style={colStyle}>
+            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+               onClick={() => handleUserNumberClick('total')}
+               onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+               onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
+              <AnimatedNumber value={totalUsers} />
+            </p>
+          </div>
+          <div style={colStyle}>
+            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+               onClick={() => handleUserNumberClick('hearing')}
+               onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+               onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
+              <AnimatedNumber value={hearingUsers} />
+            </p>
+          </div>
+          <div style={colStyle}>
+            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+               onClick={() => handleUserNumberClick('nonhearing')}
+               onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+               onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
+              <AnimatedNumber value={nonHearingUsers} />
+            </p>
+          </div>
+          <div style={colStyle}>
+            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+               onClick={() => handleUserNumberClick('inactive')}
+               onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+               onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
+              <AnimatedNumber value={inactiveUsers} />
+            </p>
+          </div>
+          <div style={colEndStyle}>
+            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+               onClick={() => handleUserNumberClick('active')}
+               onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+               onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
+              <AnimatedNumber value={activeUsers} />
+            </p>
+          </div>
         </div>
       </div>
 
@@ -368,19 +605,19 @@ function DashboardPage() {
         <div style={dashboardGridStyle}>
           <div style={dashboardBtnStyle} onClick={() => navigate('/generatereport')}>
             <img src={reportIcon} alt="Reports" style={btnIconStyle} />
-            <p style={btnTextStyle}>Reports</p>
+            <p style={btnTextStyle}>REPORTS</p>
           </div>
           <div style={dashboardBtnStyle} onClick={() => navigate('/userManagement')}>
             <img src={usersIcon} alt="Users" style={btnIconStyle} />
-            <p style={btnTextStyle}>Users</p>
+            <p style={btnTextStyle}>USERS</p>
           </div>
           <div style={dashboardBtnStyle} onClick={() => navigate('/datasets')}>
             <img src={datasetIcon} alt="Data Sets" style={btnIconStyle} />
-            <p style={btnTextStyle}>Data Sets</p>
+            <p style={btnTextStyle}>DATASETS</p>
           </div>
           <div style={dashboardBtnStyle} onClick={() => navigate('/feedback')}>
             <img src={feedbackIcon} alt="Feedback" style={btnIconStyle} />
-            <p style={btnTextStyle}>Feedback</p>
+            <p style={btnTextStyle}>FEEDBACK</p>
           </div>
         </div>
         {/* System Status */}
@@ -487,6 +724,62 @@ function DashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Statistics Popup */}
+      {isUserStatsPopupOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(72, 24, 114, 0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1002
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '20px',
+            padding: '40px',
+            width: '600px',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            textAlign: 'center',
+            position: 'relative',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+            border: '3px solid #481872'
+          }}>
+            {/* Close button */}
+            <button
+              onClick={handleCloseUserStatsPopup}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '20px',
+                background: 'transparent',
+                border: 'none',
+                fontSize: '30px',
+                cursor: 'pointer',
+                color: '#481872',
+                fontWeight: 'bold'
+              }}
+            >
+              ×
+            </button>
+
+            <UserStatsChart 
+              userType={selectedUserType}
+              totalUsers={totalUsers}
+              hearingUsers={hearingUsers}
+              nonHearingUsers={nonHearingUsers}
+              activeUsers={activeUsers}
+              inactiveUsers={inactiveUsers}
+            />
           </div>
         </div>
       )}
