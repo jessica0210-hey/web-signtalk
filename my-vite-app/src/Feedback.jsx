@@ -36,7 +36,7 @@ function Feedback() {
           }
           return {
             id: doc.id,
-            userId: data.uid,
+            userId: data.formatted_uid,
             email: data.email,
             date: dateStr,
             message: data.message,
