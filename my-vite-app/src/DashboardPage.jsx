@@ -397,7 +397,7 @@ function DashboardPage() {
 
   // --- styles ---
 
-  const headerStyle = { fontSize: '28px', margin: 0 };
+  const headerStyle = { fontSize: '32px', margin: 0 };
   const statsContainerStyle = {
     width: '1800px',
     height: '170px',
@@ -409,7 +409,7 @@ function DashboardPage() {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     padding: '30px',
-    color: 'white'
+    color: 'white',
   };
   const rowStyle = { display: 'flex', justifyContent: 'space-between', textAlign: 'center' };
   const colStyle = { flex: 1, textAlign: 'center', borderRight: '2px solid rgba(255, 255, 255, 0.5)' };

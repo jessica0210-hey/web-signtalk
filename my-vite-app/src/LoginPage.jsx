@@ -14,13 +14,64 @@ import { auth, firestore } from './firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, getDocs, setDoc } from "firebase/firestore";
 
+// CSS animations for modal effects
+const modalAnimations = `
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      visibility: hidden;
+    }
+    to {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+  
+  @keyframes modalSlideIn {
+    from {
+      transform: translate(-50%, -60%) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes modalBounce {
+    0% {
+      transform: translate(-50%, -50%) scale(0.3);
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    70% {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+    100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+`;
+
+// Inject animations into document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = modalAnimations;
+  if (!document.head.querySelector('style[data-forgot-modal-animations]')) {
+    styleElement.setAttribute('data-forgot-modal-animations', 'true');
+    document.head.appendChild(styleElement);
+  }
+}
+
 function LoginWrapper() {
   const navigate = useNavigate();
   const [showForgotPopup, setShowForgotPopup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Clear session data and handle logout on mount
   useEffect(() => {
@@ -362,53 +413,90 @@ function LoginWrapper() {
     left: 0,
     width: '100vw',
     height: '100vh',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 999
+    zIndex: 1000,
+    animation: 'modalFadeIn 0.3s ease-out forwards',
+    backdropFilter: 'blur(3px)'
   };
 
   const popupStyle = {
     backgroundColor: 'white',
-    borderRadius: '16px',
-    width: '380px',
-    height: '180px',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+    borderRadius: '20px',
+    width: '420px',
+    minHeight: '220px',
+    boxShadow: '0 20px 60px rgba(109, 37, 147, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2)',
     overflow: 'hidden',
-    zIndex: 1000,
-    fontFamily: 'Arial, sans-serif',
-    color: '#6D2593'
+    zIndex: 1001,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    color: '#6D2593',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    animation: 'modalBounce 0.5s ease-out forwards',
+    border: '1px solid rgba(109, 37, 147, 0.1)'
   };
 
   const popupHeaderStyle = {
-    backgroundColor: '#6D2593',
+    background: 'linear-gradient(135deg, #6D2593 0%, #8A4FB8 50%, #A673D4 100%)',
     color: 'white',
-    padding: '15px',
-    fontSize: '16px'
+    padding: '20px 24px',
+    fontSize: '18px',
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: '0.5px',
+    boxShadow: '0 2px 10px rgba(109, 37, 147, 0.3)'
   };
 
   const popupBodyStyle = {
-    padding: '10px',
+    padding: '30px 24px 24px',
     textAlign: 'center',
-    color: '#2d006a'
+    color: '#4a4a4a',
+    backgroundColor: '#fafafa',
+    borderRadius: '0 0 20px 20px'
   };
 
   const confirmBtnStyle = {
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: '12px 28px',
+    borderRadius: '12px',
     border: 'none',
-    backgroundColor: '#6D2593',
+    background: 'linear-gradient(135deg, #6D2593, #8A4FB8)',
     color: 'white',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 4px 12px rgba(109, 37, 147, 0.3)',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(109, 37, 147, 0.4)'
+    },
+    '&:active': {
+      transform: 'translateY(0px)'
+    }
   };
   const cancelBtnStyle = {
-    padding: '8px 16px',
-    borderRadius: '8px',
-    border: '1px solid #6D2593',
+    padding: '12px 28px',
+    borderRadius: '12px',
+    border: '2px solid #6D2593',
     backgroundColor: 'white',
     color: '#6D2593',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 8px rgba(109, 37, 147, 0.15)',
+    '&:hover': {
+      backgroundColor: '#f8f4fc',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 12px rgba(109, 37, 147, 0.2)'
+    },
+    '&:active': {
+      transform: 'translateY(0px)'
+    }
   };
 
   // Popup handlers
@@ -427,12 +515,9 @@ function LoginWrapper() {
     backgroundRepeat: 'no-repeat',
     width: '100vw',
     height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'white',
-    gap: 0
+    position: 'fixed',
+    top: 0,
+    left: 0
   };
 
   // Loading spinner style
@@ -466,62 +551,334 @@ function LoginWrapper() {
     }
   `;
 
+  // Enhanced styles for better UI
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '20px',
+    padding: '40px',
+    minHeight: '100vh',
+    justifyContent: 'center'
+  };
+
+  const logoStyle = {
+    width: '150px',
+    height: 'auto',
+    filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
+  };
+
+  const titleStyle = {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: 'white',
+    textShadow: '0 4px 8px rgba(0,0,0,0.5)',
+    letterSpacing: '2px',
+    margin: '0'
+  };
+
+  const formStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    fontSize: '16px',
+    width: '400px'
+  };
+
+  const labelStyle = {
+    fontSize: '16px',
+    fontWeight: '500',
+    color: 'white',
+    marginBottom: '4px',
+    display: 'block',
+    textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+  };
+
+  const inputStyle = {
+    padding: '12px 16px',
+    border: 'none',
+    borderRadius: '20px',
+    fontSize: '16px',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+    backgroundColor: 'white',
+    color: '#333',
+    fontFamily: 'inherit',
+    width: '100%',
+    height: '50px',
+    boxSizing: 'border-box'
+  };
+
+  const forgotLinkStyle = {
+    color: '#ffffff',
+    cursor: 'pointer',
+    textDecoration: 'underline',
+    fontSize: '14px',
+    fontWeight: '500',
+    textAlign: 'right',
+    marginTop: '6px',
+    marginBottom: '8px',
+    transition: 'all 0.2s ease',
+    display: 'block',
+    textShadow: '0 1px 2px rgba(0,0,0,0.7)'
+  };
+
+  const submitButtonStyle = {
+    backgroundColor: loading ? '#ccc' : '#FF8B00',
+    color: 'white',
+    border: 'none',
+    borderRadius: '10px',
+    height: '50px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: loading ? 'not-allowed' : 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '12px',
+    width: '180px',
+    alignSelf: 'flex-end',
+    opacity: loading ? 0.7 : 1,
+    textTransform: 'uppercase'
+  };
+
+  const passwordContainerStyle = {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  };
+
+  const eyeButtonStyle = {
+    position: 'absolute',
+    right: '16px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: '#999',
+    fontSize: '18px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0',
+    width: '24px',
+    height: '24px',
+    transition: 'color 0.2s ease'
+  };
+
+  const eyeIconStyle = {
+    width: '20px',
+    height: '20px',
+    strokeWidth: 2,
+    stroke: 'currentColor',
+    fill: 'none'
+  };
+
+  const errorStyle = {
+    color: '#e74c3c',
+    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+    border: '1px solid rgba(231, 76, 60, 0.3)',
+    borderRadius: '8px',
+    padding: '12px 16px',
+    marginTop: '16px',
+    fontSize: '14px',
+    textAlign: 'center',
+    fontWeight: '500'
+  };
+
   return (
-    <div style={bgStyle}>
+    <div style={{...bgStyle, ...containerStyle}}>
       <style>{spinnerKeyframes}</style>
-      <img src={logo} alt="SignTalk Logo" className="logo" />
-      <p>ADMIN</p>
-      <form onSubmit={handleSubmit}>
-        Username or Email
-        <input
-          type="text"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        Password
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        <div className="forgot-password">
-          <span
-            style={{
-              color: '#ffffff',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              fontSize: '16px',
-              marginTop: '4px',
-              marginBottom: '8px',
-              float: 'right'
-            }}
-            onClick={handleForgotClick}
-          >
-            Forgot Password?
-          </span>
-        </div>
-        {errorMsg && (
-          <div style={{ color: 'red', marginTop: '10px', fontWeight: 'bold', textAlign: 'center' }}>
-            {errorMsg}
+      <img 
+        src={logo} 
+        alt="SignTalk Logo" 
+        style={logoStyle}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.05)';
+          e.target.style.filter = 'drop-shadow(0 12px 24px rgba(0,0,0,0.4))';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+          e.target.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))';
+        }}
+      />
+      <h1 style={titleStyle}>ADMIN</h1>
+      
+      <form onSubmit={handleSubmit} style={formStyle}>
+          <div>
+            <label style={labelStyle}>Username or Email</label>
+            <input
+              type="text"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              style={inputStyle}
+              placeholder="Enter your username or email"
+              onFocus={(e) => {
+                e.target.style.borderColor = '#6D2593';
+                e.target.style.boxShadow = '0 0 0 3px rgba(109, 37, 147, 0.1)';
+                e.target.style.transform = 'scale(1.02)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e0e0e0';
+                e.target.style.boxShadow = 'none';
+                e.target.style.transform = 'scale(1)';
+              }}
+            />
           </div>
-        )}
-        <div className="form-button">
-          <input type="submit" value="Login" disabled={loading} />
-        </div>
-      </form>
+          
+          <div>
+            <label style={labelStyle}>Password</label>
+            <div style={passwordContainerStyle}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                style={{...inputStyle, paddingRight: '50px'}}
+                placeholder="Enter your password"
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#6D2593';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(109, 37, 147, 0.1)';
+                  e.target.style.transform = 'scale(1.02)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e0e0e0';
+                  e.target.style.boxShadow = 'none';
+                  e.target.style.transform = 'scale(1)';
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={eyeButtonStyle}
+                onMouseEnter={(e) => {
+                  e.target.style.color = '#6D2593';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.color = '#999';
+                }}
+              >
+                {showPassword ? (
+                  <svg style={eyeIconStyle} viewBox="0 0 24 24">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M2 2l20 20"/>
+                  </svg>
+                ) : (
+                  <svg style={eyeIconStyle} viewBox="0 0 24 24">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+            <span
+              style={forgotLinkStyle}
+              onClick={handleForgotClick}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#ad71ceff';
+                e.target.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = '#ffffff';
+                e.target.style.textDecoration = 'underline';
+              }}
+            >
+              Forgot Password?
+            </span>
+          </div>
+          
+          {errorMsg && (
+            <div style={errorStyle}>
+              {errorMsg}
+            </div>
+          )}
+          
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={submitButtonStyle}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(-3px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(255, 139, 0, 0.5)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.target.style.transform = 'translateY(0px)';
+                e.target.style.boxShadow = 'none';
+              }
+            }}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
       {showForgotPopup && (
         <div style={popupNotifStyle}>
           <div style={popupStyle}>
-            <div style={popupHeaderStyle}>Confirmation</div>
+            <div style={popupHeaderStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>🔐</span>
+                Confirmation
+              </div>
+            </div>
             <div style={popupBodyStyle}>
-              <p style={{ fontSize: '16px', padding: '6px' }}>
-                Are you sure you want to proceed to forgot password?
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '15px' }}>
-                <button onClick={cancelForgot} style={cancelBtnStyle}>Cancel</button>
-                <button onClick={confirmForgot} style={confirmBtnStyle}>Proceed</button>
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ 
+                  fontSize: '16px', 
+                  padding: '0', 
+                  margin: '0 0 8px 0',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Are you sure you want to proceed to forgot password?
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  margin: '0',
+                  lineHeight: '1.4'
+                }}>
+                  You will be redirected to the password recovery page.
+                </p>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                gap: '16px',
+                marginTop: '20px'
+              }}>
+                <button 
+                  onClick={cancelForgot} 
+                  style={cancelBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f8f4fc';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(109, 37, 147, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'white';
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(109, 37, 147, 0.15)';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmForgot} 
+                  style={confirmBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(109, 37, 147, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(109, 37, 147, 0.3)';
+                  }}
+                >
+                  Proceed
+                </button>
               </div>
             </div>
           </div>

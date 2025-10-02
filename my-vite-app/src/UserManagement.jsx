@@ -7,8 +7,8 @@ import resetUserPassIcon from './assets/reset-user-pass.png';
 import addAdminIcon from './assets/add_admin.png';
 import successIcon from './assets/success.png';
 import { firestore, auth } from './firebase';
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, setDoc } from 'firebase/firestore';
-import { updatePassword, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, setDoc, getDoc } from 'firebase/firestore';
+import { updatePassword, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import './index.css';
 
 // Add CSS animations for modal effects
@@ -89,8 +89,7 @@ function UserManagement() {
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [userToResetPassword, setUserToResetPassword] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
   
   // Add Admin states
@@ -294,8 +293,7 @@ function UserManagement() {
   const handleResetPassword = (user) => {
     setUserToResetPassword(user);
     setShowResetPasswordModal(true);
-    setNewPassword('');
-    setConfirmPassword('');
+    setUserEmail(user?.email || '');
     // Ensure search doesn't interfere with modal
     console.log('Opening reset password for user:', user);
   };
@@ -304,48 +302,70 @@ function UserManagement() {
     if (!userToResetPassword) return;
 
     // Validation
-    if (!newPassword || !confirmPassword) {
-      alert('Please fill in both password fields.');
+    if (!userEmail.trim()) {
+      alert('Please enter an email address.');
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      alert('Passwords do not match. Please try again.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters long.');
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      alert('Please enter a valid email address.');
       return;
     }
 
     setResetPasswordLoading(true);
 
     try {
-      // Note: Direct password reset for other users requires Firebase Admin SDK
-      // This is a client-side approach that has limitations
+      console.log('Starting password reset for user:', userToResetPassword);
       
-      // Update password in Firestore (for your app's reference)
-      const collectionName = activeTab === 'users' ? 'users' : 'admins';
-      await updateDoc(doc(firestore, collectionName, userToResetPassword.docId), {
-        passwordLastReset: new Date(),
+      // Get user document from Firestore
+      const userDocRef = doc(firestore, 'users', userToResetPassword.docId);
+      const userDocSnapshot = await getDoc(userDocRef);
+      
+      if (!userDocSnapshot.exists()) {
+        throw new Error('User document not found');
+      }
+      
+      const userDoc = { id: userDocSnapshot.id, ...userDocSnapshot.data() };
+      
+      console.log('User document found:', userDoc);
+      
+      // Verify the entered email matches the user's email
+      if (userDoc.email.toLowerCase() !== userEmail.toLowerCase()) {
+        alert('The entered email does not match the user\'s registered email address.');
+        return;
+      }
+      
+      // Send password reset email via Firebase Auth
+      await sendPasswordResetEmail(auth, userEmail);
+      console.log('Password reset email sent to:', userEmail);
+      
+      // Update Firestore with reset information
+      await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
+        passwordResetRequested: true,
+        passwordResetRequestedAt: new Date(),
         passwordResetBy: auth.currentUser?.uid || 'admin'
       });
-
-      // Note: For security reasons, Firebase doesn't allow changing other users' passwords directly
-      // You would need to implement this through Firebase Admin SDK on your server
-      // or send a password reset email to the user
       
+      alert(`Password reset email sent to ${userEmail}. The user will receive an email with a link to reset their password.`);
+      
+      // Close modal
       setShowResetPasswordModal(false);
       setUserToResetPassword(null);
-      setNewPassword('');
-      setConfirmPassword('');
-      setShowSuccessModal(true);
+      setUserEmail('');
       
-      alert('Password reset request recorded. Note: For security, actual password change requires server-side implementation with Firebase Admin SDK.');
+      // Refresh the users list
+      await fetchUsersWithCurrentUserDetection();
+      
     } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('Error resetting password. Please try again.');
+      console.error('Error sending password reset email:', error);
+      
+      if (error.code === 'auth/user-not-found') {
+        alert('No Firebase Auth account found for this email. The user may need to create an account first.');
+      } else {
+        alert(`Error sending password reset email: ${error.message}. Please try again.`);
+      }
     } finally {
       setResetPasswordLoading(false);
     }
@@ -354,9 +374,7 @@ function UserManagement() {
   const cancelResetPassword = () => {
     setShowResetPasswordModal(false);
     setUserToResetPassword(null);
-    setNewPassword('');
-    setConfirmPassword('');
-    // Clear any potential search interference
+    setUserEmail('');
     console.log('Closing reset password modal');
   };
 
@@ -719,40 +737,19 @@ function UserManagement() {
               <p style={styles.modalSubtitle}>
                 Reset password for: {userToResetPassword?.name || userToResetPassword?.email}
               </p>
+              <p style={{ ...styles.modalSubtitle, fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                A password reset email will be sent to the user's email address with a secure link to create a new password.
+              </p>
               
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>New Password:</label>
+                <label style={styles.formLabel}>User Email Address:</label>
                 <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  style={styles.formInput}
-                  placeholder="••••••••••••"
-                  minLength="6"
-                  autoComplete="new-password"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6F22A3';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
-                    e.target.style.transform = 'scale(1.02)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e0e0e0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.transform = 'scale(1)';
-                  }}
-                />
-              </div>
-              
-              <div style={styles.formGroup}>
-                <label style={styles.formLabel}>Confirm Password:</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={styles.formInput}
-                  placeholder="Confirm new password"
-                  minLength="6"
-                  autoComplete="new-password"
+                  type="email"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  style={styles.addAdminPasswordInput}
+                  placeholder="Enter user's email address"
+                  autoComplete="email"
                   onFocus={(e) => {
                     e.target.style.borderColor = '#6F22A3';
                     e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
@@ -811,7 +808,7 @@ function UserManagement() {
                   }
                 }}
               >
-                {resetPasswordLoading ? 'Resetting...' : 'Reset Password'}
+                {resetPasswordLoading ? 'Sending Email...' : 'Send Reset Email'}
               </button>
             </div>
           </div>
