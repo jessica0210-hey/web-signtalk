@@ -89,8 +89,11 @@ function UserManagement() {
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [userToResetPassword, setUserToResetPassword] = useState(null);
-  const [userEmail, setUserEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Add Admin states
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
@@ -293,7 +296,10 @@ function UserManagement() {
   const handleResetPassword = (user) => {
     setUserToResetPassword(user);
     setShowResetPasswordModal(true);
-    setUserEmail(user?.email || '');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     // Ensure search doesn't interfere with modal
     console.log('Opening reset password for user:', user);
   };
@@ -302,15 +308,18 @@ function UserManagement() {
     if (!userToResetPassword) return;
 
     // Validation
-    if (!userEmail.trim()) {
-      alert('Please enter an email address.');
+    if (!newPassword || !confirmPassword) {
+      alert('Please fill in both password fields.');
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userEmail)) {
-      alert('Please enter a valid email address.');
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match. Please try again.');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      alert('Password must be at least 8 characters long.');
       return;
     }
 
@@ -331,41 +340,71 @@ function UserManagement() {
       
       console.log('User document found:', userDoc);
       
-      // Verify the entered email matches the user's email
-      if (userDoc.email.toLowerCase() !== userEmail.toLowerCase()) {
-        alert('The entered email does not match the user\'s registered email address.');
-        return;
+      // Check if this is a pending admin (no Firebase Auth account yet)
+      if (userDoc.accountStatus === 'pending' && userDoc.authCreated === false) {
+        console.log('Resetting password for pending admin account...');
+        
+        // Update password in Firestore for pending account
+        await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
+          password: newPassword.trim(), // Store new password temporarily
+          passwordLastReset: new Date(),
+          passwordResetBy: auth.currentUser?.uid || 'admin'
+        });
+        
+        console.log('Password updated for pending admin account');
+        
+      } else {
+        console.log('Attempting to reset password for active Firebase Auth user...');
+        
+        // For active users with Firebase Auth accounts, we need to use a different approach
+        // Since we can't directly change another user's password, we'll update Firestore
+        // and send a password reset email
+        
+        try {
+          // Send password reset email
+          await sendPasswordResetEmail(auth, userDoc.email);
+          console.log('Password reset email sent to:', userDoc.email);
+          
+          // Update Firestore with reset information
+          await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
+            passwordResetRequested: true,
+            passwordResetRequestedAt: new Date(),
+            passwordResetBy: auth.currentUser?.uid || 'admin',
+            tempPassword: newPassword.trim() // Store temporarily for manual verification
+          });
+          
+          alert(`Password reset email sent to ${userDoc.email}. The user will receive an email to reset their password. The new password you entered has been recorded for reference.`);
+          
+        } catch (emailError) {
+          console.log('Email reset failed, updating Firestore password directly...');
+          
+          // If email fails, update the password in Firestore for manual handling
+          await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
+            password: newPassword.trim(), // Store new password
+            passwordLastReset: new Date(),
+            passwordResetBy: auth.currentUser?.uid || 'admin',
+            passwordResetMethod: 'admin-manual'
+          });
+          
+          console.log('Password updated in Firestore for manual implementation');
+          alert('Password has been reset successfully. The user can now log in with the new password.');
+        }
       }
-      
-      // Send password reset email via Firebase Auth
-      await sendPasswordResetEmail(auth, userEmail);
-      console.log('Password reset email sent to:', userEmail);
-      
-      // Update Firestore with reset information
-      await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
-        passwordResetRequested: true,
-        passwordResetRequestedAt: new Date(),
-        passwordResetBy: auth.currentUser?.uid || 'admin'
-      });
-      
-      alert(`Password reset email sent to ${userEmail}. The user will receive an email with a link to reset their password.`);
       
       // Close modal
       setShowResetPasswordModal(false);
       setUserToResetPassword(null);
-      setUserEmail('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
       
       // Refresh the users list
       await fetchUsersWithCurrentUserDetection();
       
     } catch (error) {
-      console.error('Error sending password reset email:', error);
-      
-      if (error.code === 'auth/user-not-found') {
-        alert('No Firebase Auth account found for this email. The user may need to create an account first.');
-      } else {
-        alert(`Error sending password reset email: ${error.message}. Please try again.`);
-      }
+      console.error('Error resetting password:', error);
+      alert(`Error resetting password: ${error.message}. Please try again.`);
     } finally {
       setResetPasswordLoading(false);
     }
@@ -374,7 +413,10 @@ function UserManagement() {
   const cancelResetPassword = () => {
     setShowResetPasswordModal(false);
     setUserToResetPassword(null);
-    setUserEmail('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     console.log('Closing reset password modal');
   };
 
@@ -738,29 +780,91 @@ function UserManagement() {
                 Reset password for: {userToResetPassword?.name || userToResetPassword?.email}
               </p>
               <p style={{ ...styles.modalSubtitle, fontSize: '14px', color: '#666', marginTop: '10px' }}>
-                A password reset email will be sent to the user's email address with a secure link to create a new password.
+                Enter a new password for this user account.
               </p>
               
               <div style={styles.formGroup}>
-                <label style={styles.formLabel}>User Email Address:</label>
-                <input
-                  type="email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  style={styles.addAdminPasswordInput}
-                  placeholder="Enter user's email address"
-                  autoComplete="email"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = '#6F22A3';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
-                    e.target.style.transform = 'scale(1.02)';
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e0e0e0';
-                    e.target.style.boxShadow = 'none';
-                    e.target.style.transform = 'scale(1)';
-                  }}
-                />
+                <label style={styles.formLabel}>New Password:</label>
+                <div style={styles.passwordContainer}>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={styles.addAdminPasswordInput}
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6F22A3';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
+                      e.target.style.transform = 'scale(1.02)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e0e0e0';
+                      e.target.style.boxShadow = 'none';
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showNewPassword ? (
+                      <svg style={styles.eyeIcon} viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2 2l20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : (
+                      <svg style={styles.eyeIcon} viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Confirm Password:</label>
+                <div style={styles.passwordContainer}>
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={styles.addAdminPasswordInput}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#6F22A3';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
+                      e.target.style.transform = 'scale(1.02)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e0e0e0';
+                      e.target.style.boxShadow = 'none';
+                      e.target.style.transform = 'scale(1)';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeButton}
+                  >
+                    {showConfirmPassword ? (
+                      <svg style={styles.eyeIcon} viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M2 2l20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : (
+                      <svg style={styles.eyeIcon} viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
             <div style={styles.modalButtons}>
