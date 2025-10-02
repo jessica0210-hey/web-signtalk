@@ -3,9 +3,78 @@ import AdminLayout from './components/AdminLayout';
 import searchIcon from './assets/search-icon.png';
 import deleteUserIcon from './assets/delete_user_icon.png';
 import deleteUserConfirmation from './assets/delete_user_confirmation.png';
-import { firestore } from './firebase';
-import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
+import resetUserPassIcon from './assets/reset-user-pass.png';
+import { firestore, auth } from './firebase';
+import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { updatePassword, signInWithEmailAndPassword } from 'firebase/auth';
 import './index.css';
+
+// Add CSS animations for modal effects
+const modalAnimations = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes popupSlideIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.7) translateY(-20px);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05) translateY(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0px);
+    }
+  }
+
+  @keyframes buttonHover {
+    0% {
+      transform: translateY(0px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    100% {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+  }
+
+  @keyframes iconBounce {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) rotate(-10deg);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1) rotate(5deg);
+    }
+    80% {
+      opacity: 0.9;
+      transform: scale(0.95) rotate(-2deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+`;
+
+// Inject animations into document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = modalAnimations;
+  if (!document.head.querySelector('style[data-modal-animations]')) {
+    styleElement.setAttribute('data-modal-animations', 'true');
+    document.head.appendChild(styleElement);
+  }
+}
 
 function UserManagement() {
   const [activeTab, setActiveTab] = useState("users");
@@ -15,7 +84,12 @@ function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [userToResetPassword, setUserToResetPassword] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
   // Fetch users from Firebase
   useEffect(() => {
@@ -146,6 +220,75 @@ function UserManagement() {
     setShowSuccessModal(false);
   };
 
+  const handleResetPassword = (user) => {
+    setUserToResetPassword(user);
+    setShowResetPasswordModal(true);
+    setNewPassword('');
+    setConfirmPassword('');
+    // Ensure search doesn't interfere with modal
+    console.log('Opening reset password for user:', user);
+  };
+
+  const confirmResetPassword = async () => {
+    if (!userToResetPassword) return;
+
+    // Validation
+    if (!newPassword || !confirmPassword) {
+      alert('Please fill in both password fields.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match. Please try again.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setResetPasswordLoading(true);
+
+    try {
+      // Note: Direct password reset for other users requires Firebase Admin SDK
+      // This is a client-side approach that has limitations
+      
+      // Update password in Firestore (for your app's reference)
+      const collectionName = activeTab === 'users' ? 'users' : 'admins';
+      await updateDoc(doc(firestore, collectionName, userToResetPassword.docId), {
+        passwordLastReset: new Date(),
+        passwordResetBy: auth.currentUser?.uid || 'admin'
+      });
+
+      // Note: For security reasons, Firebase doesn't allow changing other users' passwords directly
+      // You would need to implement this through Firebase Admin SDK on your server
+      // or send a password reset email to the user
+      
+      setShowResetPasswordModal(false);
+      setUserToResetPassword(null);
+      setNewPassword('');
+      setConfirmPassword('');
+      setShowSuccessModal(true);
+      
+      alert('Password reset request recorded. Note: For security, actual password change requires server-side implementation with Firebase Admin SDK.');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Error resetting password. Please try again.');
+    } finally {
+      setResetPasswordLoading(false);
+    }
+  };
+
+  const cancelResetPassword = () => {
+    setShowResetPasswordModal(false);
+    setUserToResetPassword(null);
+    setNewPassword('');
+    setConfirmPassword('');
+    // Clear any potential search interference
+    console.log('Closing reset password modal');
+  };
+
   return (
     <AdminLayout title="USER MANAGEMENT">
       <div style={styles.container}>
@@ -182,6 +325,7 @@ function UserManagement() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              autoComplete="off"
             />
             <button style={styles.searchBtn} onClick={handleSearch}>
               <img src={searchIcon} alt="Search" style={styles.searchIcon} />
@@ -229,7 +373,12 @@ function UserManagement() {
                         <td style={styles.td}>{item.email || 'N/A'}</td>
                         {activeTab === "users" && <td style={styles.td}>{item.name || 'N/A'}</td>}
                         <td style={{ ...styles.td, borderTopRightRadius: "10px", borderBottomRightRadius: "10px", textAlign: "right" }}>
-                          <button style={styles.resetBtn}>Reset Password</button>
+                          <button 
+                            style={styles.resetBtn}
+                            onClick={() => handleResetPassword(item)}
+                          >
+                            Reset Password
+                          </button>
                           <button 
                             style={styles.deleteBtn}
                             onClick={() => handleDeleteAccount(item)}
@@ -264,12 +413,32 @@ function UserManagement() {
               <button 
                 style={styles.cancelBtn}
                 onClick={cancelDelete}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  e.target.style.backgroundColor = '#5a6268';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0px)';
+                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                  e.target.style.backgroundColor = '#6c757d';
+                }}
               >
                 Cancel
               </button>
               <button 
                 style={styles.confirmDeleteBtn}
                 onClick={confirmDeleteAccount}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(230, 57, 70, 0.4)';
+                  e.target.style.backgroundColor = '#c82333';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0px)';
+                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                  e.target.style.backgroundColor = '#E63946';
+                }}
               >
                 Delete
               </button>
@@ -292,8 +461,129 @@ function UserManagement() {
               <button 
                 style={styles.okBtn}
                 onClick={closeSuccessModal}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  e.target.style.backgroundColor = '#5a6268';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0px)';
+                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                  e.target.style.backgroundColor = '#6c757d';
+                }}
               >
                 OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {showResetPasswordModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.resetPasswordModal}>
+            <div style={styles.modalIcon}>
+              <img src={resetUserPassIcon} alt="Reset Password" style={styles.resetPasswordIcon} />
+            </div>
+            <div style={styles.modalContent}>
+              <h3 style={styles.modalTitle}>Reset User Password</h3>
+              <p style={styles.modalSubtitle}>
+                Reset password for: {userToResetPassword?.name || userToResetPassword?.email}
+              </p>
+              
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>New Password:</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  style={styles.formInput}
+                  placeholder="••••••••••••"
+                  minLength="6"
+                  autoComplete="new-password"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6F22A3';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
+                    e.target.style.transform = 'scale(1.02)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e0e0e0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                />
+              </div>
+              
+              <div style={styles.formGroup}>
+                <label style={styles.formLabel}>Confirm Password:</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  style={styles.formInput}
+                  placeholder="Confirm new password"
+                  minLength="6"
+                  autoComplete="new-password"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6F22A3';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
+                    e.target.style.transform = 'scale(1.02)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e0e0e0';
+                    e.target.style.boxShadow = 'none';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                />
+              </div>
+            </div>
+            <div style={styles.modalButtons}>
+              <button 
+                style={styles.cancelBtn}
+                onClick={cancelResetPassword}
+                disabled={resetPasswordLoading}
+                onMouseEnter={(e) => {
+                  if (!resetPasswordLoading) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                    e.target.style.backgroundColor = '#5a6268';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!resetPasswordLoading) {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.target.style.backgroundColor = '#6c757d';
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                style={{
+                  ...styles.confirmResetBtn,
+                  opacity: resetPasswordLoading ? 0.6 : 1,
+                  cursor: resetPasswordLoading ? 'not-allowed' : 'pointer'
+                }}
+                onClick={confirmResetPassword}
+                disabled={resetPasswordLoading}
+                onMouseEnter={(e) => {
+                  if (!resetPasswordLoading) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(111, 34, 163, 0.4)';
+                    e.target.style.backgroundColor = '#5d1c87';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!resetPasswordLoading) {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.target.style.backgroundColor = '#6F22A3';
+                  }
+                }}
+              >
+                {resetPasswordLoading ? 'Resetting...' : 'Reset Password'}
               </button>
             </div>
           </div>
@@ -321,20 +611,26 @@ const styles = {
   resetBtn: { backgroundColor: '#6F22A3', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', marginRight: '12px', cursor: 'pointer', fontSize: '14px' },
   deleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontSize: '14px' },
   addBtn: { marginTop: '15px', backgroundColor: '#38B000', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 20px', cursor: 'pointer', fontSize: '16px' },
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modal: { backgroundColor: '#fff', borderRadius: '10px', padding: '30px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'scaleInModal 0.3s ease-out' },
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.3s ease-out' },
+  modal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' },
   modalIcon: { marginBottom: '20px' },
-  deleteIcon: { width: '80px', height: '80px' },
+  deleteIcon: { width: '80px', height: '80px', animation: 'iconBounce 0.6s ease-out 0.2s both' },
   modalContent: { marginBottom: '30px' },
-  modalTitle: { fontSize: '18px', fontWeight: 'bold', color: '#333', marginBottom: '10px', margin: '0 0 10px 0' },
-  modalSubtitle: { fontSize: '14px', color: '#666', margin: 0 },
+  modalTitle: { fontSize: '20px', fontWeight: 'bold', color: '#333', marginBottom: '15px', margin: '0 0 15px 0' },
+  modalSubtitle: { fontSize: '14px', color: '#666', margin: '0 0 25px 0' },
   modalButtons: { display: 'flex', gap: '15px', justifyContent: 'center' },
-  cancelBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', cursor: 'pointer', fontSize: '14px' },
-  confirmDeleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', cursor: 'pointer', fontSize: '14px' },
-  successModal: { backgroundColor: '#fff', borderRadius: '10px', padding: '30px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'scaleInModal 0.3s ease-out' },
-  successIcon: { width: '60px', height: '60px' },
+  cancelBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease', transform: 'translateY(0px)' },
+  confirmDeleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', fontWeight: '500' },
+  successModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' },
+  successIcon: { width: '60px', height: '60px', animation: 'iconBounce 0.6s ease-out 0.2s both' },
   successMessage: { fontSize: '16px', color: '#333', margin: '20px 0', lineHeight: '1.4' },
-  okBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px' },
+  okBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', fontWeight: '500' },
+  resetPasswordModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '450px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
+  resetPasswordIcon: { width: '80px', height: '80px', animation: 'iconBounce 0.6s ease-out 0.2s both' },
+  formGroup: { marginBottom: '25px', textAlign: 'left' },
+  formLabel: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '8px' },
+  formInput: { width: '100%', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', color: '#333', outline: 'none', transition: 'all 0.3s ease', boxSizing: 'border-box', backgroundColor: '#f8f9fa', transform: 'scale(1)' },
+  confirmResetBtn: { backgroundColor: '#6F22A3', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease', transform: 'translateY(0px)' },
 };
 
 export default UserManagement;

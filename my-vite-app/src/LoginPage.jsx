@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import bgImage from './assets/background.png'; 
 import logo from './assets/signtalk_logo.png'; 
@@ -9,8 +9,9 @@ import GenerateReport from './GenerateReport';
 import Datasets from './Datasets';
 import ForgotPass from './ForgotPass';
 import UserManagement from './UserManagement';
+import ProtectedRoute from './components/ProtectedRoute';
 import { auth, firestore } from './firebase';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 function LoginWrapper() {
@@ -20,6 +21,128 @@ function LoginWrapper() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false); // Add loading state
+
+  // Clear session data and handle logout on mount
+  useEffect(() => {
+    // Clear all session data when login page loads
+    sessionStorage.clear();
+    localStorage.removeItem('isLoggedIn');
+    
+    // Check for forced logout flag
+    if (localStorage.getItem('forceLogout') === 'true') {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+    
+    // Override browser back/forward navigation
+    const handlePopState = (event) => {
+      // Clear any protected history and stay on login
+      window.history.pushState(null, '', '/login');
+    };
+
+    // Override history API methods
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function(...args) {
+      // If trying to navigate to protected routes without auth, redirect to login
+      if (args[2] && (args[2].includes('dashboard') || args[2].includes('userManagement') || args[2].includes('generateReport') || args[2].includes('feedback') || args[2].includes('datasets') || args[2].includes('settings'))) {
+        if (!auth.currentUser) {
+          originalPushState.call(this, null, '', '/login');
+          return;
+        }
+      }
+      originalPushState.apply(this, args);
+    };
+
+    window.history.replaceState = function(...args) {
+      // If trying to navigate to protected routes without auth, redirect to login  
+      if (args[2] && (args[2].includes('dashboard') || args[2].includes('userManagement') || args[2].includes('generateReport') || args[2].includes('feedback') || args[2].includes('datasets') || args[2].includes('settings'))) {
+        if (!auth.currentUser) {
+          originalReplaceState.call(this, null, '', '/login');
+          return;
+        }
+      }
+      originalReplaceState.apply(this, args);
+    };
+
+    // Add event listeners
+    window.addEventListener('popstate', handlePopState);
+    
+    // Clear browser history and set login as the only entry
+    window.history.replaceState(null, '', '/login');
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // Restore original methods
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
+  }, []);
+
+  // Monitor authentication state and redirect if user becomes authenticated
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is authenticated, check if they're an admin and redirect to dashboard
+        const checkAdminAndRedirect = async () => {
+          try {
+            const userDocRef = doc(firestore, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists() && userDoc.data().userType === 'admin') {
+              navigate('/dashboardPage', { replace: true });
+            } else {
+              // Not an admin, sign them out
+              await auth.signOut();
+            }
+          } catch (error) {
+            // Error checking admin status, sign out for security
+            await auth.signOut();
+          }
+        };
+        checkAdminAndRedirect();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  // Prevent navigation to protected routes via direct interaction
+  useEffect(() => {
+    const handleUserInteraction = (event) => {
+      // Check if user is trying to navigate without authentication
+      if (!auth.currentUser) {
+        // Block any navigation attempts and ensure we stay on login
+        const href = event.target.href;
+        if (href && (href.includes('dashboard') || href.includes('user') || href.includes('generate') || href.includes('feedback') || href.includes('datasets'))) {
+          event.preventDefault();
+          navigate('/login', { replace: true });
+        }
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      // Block common navigation keyboard shortcuts when not authenticated
+      if (!auth.currentUser) {
+        if ((event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) ||
+            (event.ctrlKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) ||
+            event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+          // Allow refresh but ensure we stay on login
+          if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+            window.location.href = '/login';
+          }
+        }
+      }
+    };
+
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navigate]);
 
   //admin credentials
   //signtalk625@gmail.com
@@ -36,7 +159,9 @@ function LoginWrapper() {
       const userDocRef = doc(firestore, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists() && userDoc.data().userType === 'admin') {
-        navigate('/dashboardPage');
+        // Clear browser history and navigate to dashboard
+        window.history.replaceState(null, '', '/dashboardPage');
+        navigate('/dashboardPage', { replace: true });
       } else {
         setErrorMsg('Access denied. Only admin users can log in.');
         await auth.signOut();
@@ -234,12 +359,48 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<LoginWrapper />} />
-        <Route path="/dashboardPage" element={<DashboardPage />} />
-        <Route path="/generateReport" element={<GenerateReport />} />
-        <Route path="/feedback" element={<Feedback />} />
-        <Route path="/datasets" element={<Datasets />} />
+        <Route path="/login" element={<LoginWrapper />} />
         <Route path="/forgotpass" element={<ForgotPass />} />
-        <Route path="/userManagement" element={<UserManagement />} />
+        <Route 
+          path="/dashboardPage" 
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/generateReport" 
+          element={
+            <ProtectedRoute>
+              <GenerateReport />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/feedback" 
+          element={
+            <ProtectedRoute>
+              <Feedback />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/datasets" 
+          element={
+            <ProtectedRoute>
+              <Datasets />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/userManagement" 
+          element={
+            <ProtectedRoute>
+              <UserManagement />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </Router>
   );

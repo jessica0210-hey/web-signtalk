@@ -13,7 +13,7 @@ import activeBtn from './assets/activeBtn.png';
 import usersIcon from './assets/usersIcon.png';
 import { firestore, auth } from './firebase';
 import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
-import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { EmailAuthProvider, reauthenticateWithCredential, onAuthStateChanged } from "firebase/auth";
 
 function AnimatedNumber({ value, duration = 300 }) {
   const [display, setDisplay] = useState(0);
@@ -305,11 +305,18 @@ function DashboardPage() {
     fetchUserStats();
   }, []);
 
+
+
   const handleActiveClick = () => {
     setIsPopupOpen(true);
   };
 
   const handleConfirm = async () => {
+    if (!password || password.trim() === '') {
+      setError('Admin password is required!');
+      return;
+    }
+
     setLoading(true);
     try {
       const currentUser = auth.currentUser;
@@ -524,6 +531,8 @@ function DashboardPage() {
       }
     }
   `;
+
+
 
   return (
     <AdminLayout>

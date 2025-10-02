@@ -4,13 +4,17 @@ import bgImage from '../assets/background.png';
 import headerImage from '../assets/headerImage.png';
 import logo from '../assets/signtalk_logo.png';
 import profileBtn from '../assets/profile.png'; 
-import logoutBtn from '../assets/logout_btn.png'; 
+import logoutBtn from '../assets/logout_btn.png';
+import { auth } from '../firebase';
+import { signOut } from 'firebase/auth'; 
 
 function AdminLayout({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // <-- get current route
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef(null);
 
   const bgStyle = {
@@ -129,13 +133,69 @@ function AdminLayout({ children, title }) {
     setIsOpen(false);
   };
 
-  const confirmLogout = () => {
-    setShowLogoutPopup(false);
-    navigate('/');
+  const confirmLogout = async () => {
+    setLoggingOut(true);
+    setLogoutError('');
+    
+    try {
+      // Sign out from Firebase Auth
+      await signOut(auth);
+      
+      // Clear all session and local storage data
+      sessionStorage.clear();
+      localStorage.clear();
+      
+      // Clear browser cache (if possible)
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => {
+            caches.delete(name);
+          });
+        });
+      }
+      
+      // Set logout flag for other components
+      window.localStorage.setItem('forceLogout', 'true');
+      
+      // Replace current history entry with login
+      window.history.replaceState(null, '', '/login');
+      
+      // Navigate to login page with complete replacement
+      navigate('/login', { replace: true });
+      
+      // Reload page to ensure clean state
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error signing out:', error);
+      setLoggingOut(false);
+      
+      // Check if it's a network error
+      if (error.code === 'auth/network-request-failed' || 
+          error.message.includes('network') || 
+          error.message.includes('connection') ||
+          !navigator.onLine) {
+        // Network failure - keep admin logged in and show error
+        setLogoutError('Logout failed. Please check your network connection.');
+        setShowLogoutPopup(false);
+      } else {
+        // Other errors - still try to logout for security
+        setLogoutError('Logout encountered an issue, but you have been signed out for security.');
+        sessionStorage.clear();
+        localStorage.clear();
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      }
+    }
   };
 
   const cancelLogout = () => {
     setShowLogoutPopup(false);
+    setLogoutError('');
+    setLoggingOut(false);
   };
 
   return (
@@ -178,10 +238,68 @@ function AdminLayout({ children, title }) {
           <div style={popupStyle}>
             <div style={popupHeaderStyle}>Confirmation</div>
             <div style={popupBodyStyle}>
-              <p style={{ fontSize: '16px', padding: '6px' }}>Are you sure you want to logout?</p>
+              <p style={{ fontSize: '16px', padding: '6px' }}>
+                {loggingOut ? 'Logging out...' : 'Are you sure you want to logout?'}
+              </p>
               <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '15px' }}>
-                <button onClick={cancelLogout} style={cancelLogoutBtnStyle}>Cancel</button>
-                <button onClick={confirmLogout} style={confirmLogoutBtnStyle}>Confirm</button>
+                <button 
+                  onClick={cancelLogout} 
+                  style={cancelLogoutBtnStyle}
+                  disabled={loggingOut}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmLogout} 
+                  style={{
+                    ...confirmLogoutBtnStyle,
+                    opacity: loggingOut ? 0.6 : 1,
+                    cursor: loggingOut ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={loggingOut}
+                >
+                  {loggingOut ? 'Please wait...' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Network Error Display */}
+      {logoutError && (
+        <div style={popupNotifStyle}>
+          <div style={{
+            ...popupStyle,
+            backgroundColor: '#fff',
+            border: '2px solid #e74c3c'
+          }}>
+            <div style={{
+              ...popupHeaderStyle,
+              backgroundColor: '#e74c3c',
+              color: 'white'
+            }}>
+              Logout Error
+            </div>
+            <div style={popupBodyStyle}>
+              <p style={{ fontSize: '16px', padding: '10px', color: '#e74c3c' }}>
+                {logoutError}
+              </p>
+              <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                <button 
+                  onClick={() => setLogoutError('')}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#6D2593',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>
