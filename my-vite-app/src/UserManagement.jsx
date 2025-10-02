@@ -6,9 +6,10 @@ import deleteUserConfirmation from './assets/delete_user_confirmation.png';
 import resetUserPassIcon from './assets/reset-user-pass.png';
 import addAdminIcon from './assets/add_admin.png';
 import successIcon from './assets/success.png';
-import { firestore, auth } from './firebase';
+import { firestore, auth, functions } from './firebase';
 import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc, setDoc, getDoc } from 'firebase/firestore';
-import { updatePassword, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { updatePassword, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
 import './index.css';
 
 // Add CSS animations for modal effects
@@ -25,15 +26,38 @@ const modalAnimations = `
   @keyframes popupSlideIn {
     0% {
       opacity: 0;
-      transform: scale(0.7) translateY(-20px);
+      transform: scale(0.5) translateY(-30px);
     }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.05) translateY(-10px);
+    60% {
+      opacity: 0.9;
+      transform: scale(1.08) translateY(-5px);
+    }
+    80% {
+      opacity: 1;
+      transform: scale(0.98) translateY(2px);
     }
     100% {
       opacity: 1;
       transform: scale(1) translateY(0px);
+    }
+  }
+
+  @keyframes iconBounce {
+    0% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.3);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 
@@ -46,6 +70,11 @@ const modalAnimations = `
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   @keyframes iconBounce {
@@ -66,16 +95,164 @@ const modalAnimations = `
       transform: scale(1) rotate(0deg);
     }
   }
+  
+  /* Button reset styles */
+  button {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border: none !important;
+    outline: none !important;
+  }
+  
+  /* Success Modal Button */
+  .success-modal-btn {
+    background-color: #38B000 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 12px 30px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(56, 176, 0, 0.3) !important;
+    min-width: 120px !important;
+    outline: none !important;
+    text-decoration: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    box-sizing: border-box !important;
+  }
+  
+  .success-modal-btn:hover {
+    background-color: #2E8B00 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(56, 176, 0, 0.4) !important;
+  }
+  
+  .success-modal-btn:focus {
+    outline: none !important;
+    border: none !important;
+  }
+  
+  /* High specificity override for success button */
+  #success-btn-override,
+  #success-btn-override:active,
+  #success-btn-override:focus,
+  button#success-btn-override {
+    background-color: #38B000 !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 12px 30px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 2px 8px rgba(56, 176, 0, 0.3) !important;
+    min-width: 120px !important;
+    outline: none !important;
+    text-decoration: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    box-sizing: border-box !important;
+  }
+  
+  #success-btn-override:hover,
+  button#success-btn-override:hover {
+    background-color: #2E8B00 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(56, 176, 0, 0.4) !important;
+  }
 `;
 
-// Inject animations into document
+// Inject animations and force button styling into document
 if (typeof document !== 'undefined') {
+  // Remove any existing modal styles
+  const existingStyles = document.head.querySelectorAll('style[data-modal-animations]');
+  existingStyles.forEach(style => style.remove());
+  
+  // Create new aggressive styles
   const styleElement = document.createElement('style');
-  styleElement.textContent = modalAnimations;
-  if (!document.head.querySelector('style[data-modal-animations]')) {
-    styleElement.setAttribute('data-modal-animations', 'true');
-    document.head.appendChild(styleElement);
+  styleElement.textContent = modalAnimations + `
+  
+  /* EXTREMELY AGGRESSIVE BUTTON STYLING */
+  .force-green-btn-12345 {
+    background: #38B000 !important;
+    background-color: #38B000 !important;
+    color: #FFFFFF !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    border-radius: 8px !important;
+    padding: 12px 30px !important;
+    margin: 10px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    font-family: Arial !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    min-width: 120px !important;
+    height: 45px !important;
+    line-height: 21px !important;
+    box-shadow: 0 3px 10px rgba(56, 176, 0, 0.5) !important;
+    position: relative !important;
+    z-index: 999999 !important;
+    outline: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    box-sizing: border-box !important;
   }
+  
+  .force-green-btn-12345:hover {
+    background: #2E8B00 !important;
+    background-color: #2E8B00 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(46, 139, 0, 0.6) !important;
+  }
+  
+  .force-green-btn-12345:active {
+    background: #2E8B00 !important;
+    background-color: #2E8B00 !important;
+  }
+  
+  .force-green-btn-12345:focus {
+    background: #38B000 !important;
+    background-color: #38B000 !important;
+    outline: none !important;
+    border: none !important;
+  }
+  
+  /* Override any possible framework styles */
+  div.force-green-btn-12345,
+  button.force-green-btn-12345,
+  .force-green-btn-12345[role="button"],
+  *[class*="force-green-btn-12345"] {
+    background: #38B000 !important;
+    background-color: #38B000 !important;
+    color: #FFFFFF !important;
+  }
+  `;
+  
+  styleElement.setAttribute('data-modal-animations', 'true');
+  document.head.appendChild(styleElement);
 }
 
 function UserManagement() {
@@ -94,6 +271,7 @@ function UserManagement() {
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   
   // Add Admin states
   const [showAddAdminModal, setShowAddAdminModal] = useState(false);
@@ -104,6 +282,99 @@ function UserManagement() {
   const [addAdminError, setAddAdminError] = useState('');
   const [showAddAdminSuccess, setShowAddAdminSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // New modal states for success/error messages
+  const [showGeneralSuccessModal, setShowGeneralSuccessModal] = useState(false);
+  const [showGeneralErrorModal, setShowGeneralErrorModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  
+  // Button hover states
+  const [successBtnHover, setSuccessBtnHover] = useState(false);
+  const [errorBtnHover, setErrorBtnHover] = useState(false);
+
+  // Force inject button styles - this WILL work!
+  useEffect(() => {
+    const createButtonStyles = () => {
+      // Remove any previous attempts
+      document.querySelectorAll('#final-button-fix').forEach(el => el.remove());
+
+      const style = document.createElement('style');
+      style.id = 'final-button-fix';
+      style.innerHTML = `
+        .final-green-button {
+          background: #38B000 !important;
+          background-color: #38B000 !important;
+          color: #FFFFFF !important;
+          border: none !important;
+          border-radius: 8px !important;
+          padding: 12px 30px !important;
+          cursor: pointer !important;
+          font-size: 16px !important;
+          font-weight: bold !important;
+          font-family: Arial, sans-serif !important;
+          text-align: center !important;
+          display: inline-block !important;
+          min-width: 120px !important;
+          height: 45px !important;
+          line-height: 21px !important;
+          box-shadow: 0 3px 10px rgba(56, 176, 0, 0.6) !important;
+          outline: none !important;
+          margin: 10px !important;
+        }
+        
+        .final-green-button:hover {
+          background: #2E8B00 !important;
+          background-color: #2E8B00 !important;
+          transform: translateY(-2px) !important;
+          box-shadow: 0 5px 15px rgba(46, 139, 0, 0.8) !important;
+        }
+        
+        .final-green-button:active,
+        .final-green-button:focus {
+          background: #38B000 !important;
+          background-color: #38B000 !important;
+          outline: none !important;
+        }
+      `;
+      
+      document.head.appendChild(style);
+    };
+
+    createButtonStyles();
+    
+    // Also ensure it's applied when modals show
+    if (showGeneralSuccessModal || showGeneralErrorModal) {
+      setTimeout(createButtonStyles, 50);
+    }
+  }, [showGeneralSuccessModal, showGeneralErrorModal]);
+
+  // Helper function to create a simple hash (for basic security)
+  const createPasswordHash = async (password) => {
+    try {
+      // Simple hash using SubtleCrypto API (available in browsers)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    } catch (error) {
+      console.warn('Hashing not available, storing plain text password:', error);
+      return password; // Fallback to plain text if hashing fails
+    }
+  };
+
+  // Helper functions for modals
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+    setShowGeneralSuccessModal(true);
+  };
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowGeneralErrorModal(true);
+  };
 
   // Helper function to fetch users with current user detection
   const fetchUsersWithCurrentUserDetection = async () => {
@@ -253,7 +524,7 @@ function UserManagement() {
   const handleDeleteAccount = (user) => {
     // Prevent deleting the currently logged-in admin
     if (user.isCurrentUser && activeTab === "admins") {
-      alert('You cannot delete your own admin account while you are logged in.');
+      showError('You cannot delete your own admin account while you are logged in.');
       return;
     }
     
@@ -264,29 +535,77 @@ function UserManagement() {
   const confirmDeleteAccount = async () => {
     if (!userToDelete) return;
 
+    // Prevent self-deletion
+    if (userToDelete.isCurrentUser && activeTab === "admins") {
+      showError('You cannot delete your own admin account while logged in.');
+      return;
+    }
+
+    setDeleteLoading(true);
+
     try {
-      // All users (both regular users and admins) are stored in the 'users' collection
-      console.log('Deleting user with docId:', userToDelete.docId, 'userType:', userToDelete.userType);
-      await deleteDoc(doc(firestore, 'users', userToDelete.docId));
-      console.log('Successfully deleted user from Firestore');
+      const currentAdmin = auth.currentUser;
       
-      // Refresh the users list to maintain current user detection
-      await fetchUsersWithCurrentUserDetection();
-      console.log('Updated users list, removed user with docId:', userToDelete.docId);
+      if (!currentAdmin) {
+        throw new Error('Not authenticated as admin');
+      }
+
+      console.log('Starting account deletion for user:', userToDelete.email);
       
+      // Call Cloud Function to delete user account with Admin SDK privileges
+      const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
+      
+      const result = await deleteUserAccount({
+        email: userToDelete.email,
+        adminUid: currentAdmin.uid
+      });
+
+      console.log('Cloud Function result:', result.data);
+
+      if (result.data.success) {
+        // Close modal and show success
+        setShowDeleteModal(false);
+        setUserToDelete(null);
+        
+        // Refresh users list
+        await fetchUsersWithCurrentUserDetection();
+        
+        // Show success message
+        showSuccess(`Account successfully deleted for ${userToDelete.email}!`);
+        setShowSuccessModal(true);
+      } else {
+        throw new Error(result.data.message || 'Unknown error');
+      }
+      
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      
+      let errorMessage = 'Failed to delete account. Please try again.';
+      
+      if (error.message.includes('User not found')) {
+        errorMessage = 'User not found. The account may have already been deleted.';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'Invalid email address.';
+      } else if (error.message.includes('Unauthorized')) {
+        errorMessage = 'Permission denied. Please check your admin privileges.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(`Account deletion failed: ${errorMessage}`);
+      
+      // Reset state on error
       setShowDeleteModal(false);
       setUserToDelete(null);
-      setShowSuccessModal(true);
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      console.error('Failed to delete user with docId:', userToDelete.docId);
-      alert('Error deleting account. Please try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
   const cancelDelete = () => {
     setShowDeleteModal(false);
     setUserToDelete(null);
+    setDeleteLoading(false);
   };
 
   const closeSuccessModal = () => {
@@ -309,102 +628,76 @@ function UserManagement() {
 
     // Validation
     if (!newPassword || !confirmPassword) {
-      alert('Please fill in both password fields.');
+      showError('Please fill in both password fields.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('Passwords do not match. Please try again.');
+      showError('Passwords do not match. Please try again.');
       return;
     }
 
     if (newPassword.length < 8) {
-      alert('Password must be at least 8 characters long.');
+      showError('Password must be at least 8 characters long.');
       return;
     }
 
     setResetPasswordLoading(true);
 
     try {
-      console.log('Starting password reset for user:', userToResetPassword);
+      const currentAdmin = auth.currentUser;
       
-      // Get user document from Firestore
-      const userDocRef = doc(firestore, 'users', userToResetPassword.docId);
-      const userDocSnapshot = await getDoc(userDocRef);
-      
-      if (!userDocSnapshot.exists()) {
-        throw new Error('User document not found');
+      if (!currentAdmin) {
+        throw new Error('Not authenticated as admin');
       }
+
+      console.log('Starting password reset for user:', userToResetPassword.email);
       
-      const userDoc = { id: userDocSnapshot.id, ...userDocSnapshot.data() };
+      // Call Cloud Function to reset password with Admin SDK privileges
+      const resetUserPassword = httpsCallable(functions, 'resetUserPassword');
       
-      console.log('User document found:', userDoc);
-      
-      // Check if this is a pending admin (no Firebase Auth account yet)
-      if (userDoc.accountStatus === 'pending' && userDoc.authCreated === false) {
-        console.log('Resetting password for pending admin account...');
+      const result = await resetUserPassword({
+        email: userToResetPassword.email,
+        newPassword: newPassword.trim(),
+        adminUid: currentAdmin.uid
+      });
+
+      console.log('Cloud Function result:', result.data);
+
+      if (result.data.success) {
+        // Close modal and refresh
+        setShowResetPasswordModal(false);
+        setUserToResetPassword(null);
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowNewPassword(false);
+        setShowConfirmPassword(false);
         
-        // Update password in Firestore for pending account
-        await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
-          password: newPassword.trim(), // Store new password temporarily
-          passwordLastReset: new Date(),
-          passwordResetBy: auth.currentUser?.uid || 'admin'
-        });
+        // Refresh users list
+        await fetchUsersWithCurrentUserDetection();
         
-        console.log('Password updated for pending admin account');
-        
+        // Show success modal
+        showSuccess(`Password successfully reset for ${userToResetPassword.email}!\n\nUser can now log in with the new password immediately!`);
       } else {
-        console.log('Attempting to reset password for active Firebase Auth user...');
-        
-        // For active users with Firebase Auth accounts, we need to use a different approach
-        // Since we can't directly change another user's password, we'll update Firestore
-        // and send a password reset email
-        
-        try {
-          // Send password reset email
-          await sendPasswordResetEmail(auth, userDoc.email);
-          console.log('Password reset email sent to:', userDoc.email);
-          
-          // Update Firestore with reset information
-          await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
-            passwordResetRequested: true,
-            passwordResetRequestedAt: new Date(),
-            passwordResetBy: auth.currentUser?.uid || 'admin',
-            tempPassword: newPassword.trim() // Store temporarily for manual verification
-          });
-          
-          alert(`Password reset email sent to ${userDoc.email}. The user will receive an email to reset their password. The new password you entered has been recorded for reference.`);
-          
-        } catch (emailError) {
-          console.log('Email reset failed, updating Firestore password directly...');
-          
-          // If email fails, update the password in Firestore for manual handling
-          await updateDoc(doc(firestore, 'users', userToResetPassword.docId), {
-            password: newPassword.trim(), // Store new password
-            passwordLastReset: new Date(),
-            passwordResetBy: auth.currentUser?.uid || 'admin',
-            passwordResetMethod: 'admin-manual'
-          });
-          
-          console.log('Password updated in Firestore for manual implementation');
-          alert('Password has been reset successfully. The user can now log in with the new password.');
-        }
+        throw new Error(result.data.message || 'Unknown error');
+      }
+
+    } catch (error) {
+      console.error('Password reset error:', error);
+      
+      let errorMessage = 'Failed to reset password. Please try again.';
+      
+      if (error.message.includes('User not found')) {
+        errorMessage = 'User not found. Please check the email address.';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'Invalid email address.';
+      } else if (error.message.includes('Unauthorized')) {
+        errorMessage = 'Permission denied. Please check your admin privileges.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
-      // Close modal
-      setShowResetPasswordModal(false);
-      setUserToResetPassword(null);
-      setNewPassword('');
-      setConfirmPassword('');
-      setShowNewPassword(false);
-      setShowConfirmPassword(false);
-      
-      // Refresh the users list
-      await fetchUsersWithCurrentUserDetection();
-      
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      alert(`Error resetting password: ${error.message}. Please try again.`);
+      showError(`Password reset failed: ${errorMessage}`);
     } finally {
       setResetPasswordLoading(false);
     }
@@ -467,76 +760,59 @@ function UserManagement() {
     // Set loading immediately to prevent multiple executions
     setAddAdminLoading(true);
     setAddAdminError('');
-    console.log('Starting admin creation process...');
+    console.log('Starting admin creation process with Cloud Functions...');
 
     try {
-      // Store current admin info
       const currentAdmin = auth.currentUser;
-      const currentAdminUid = currentAdmin?.uid;
       
-      console.log('Current admin UID:', currentAdminUid);
-      
-      // Check if email already exists in Firestore
-      const usersRef = collection(firestore, 'users');
-      const existingUsersSnapshot = await getDocs(usersRef);
-      const existingEmails = existingUsersSnapshot.docs.map(doc => doc.data().email);
-      
-      if (existingEmails.includes(adminEmail.trim())) {
-        setAddAdminError('This email is already registered. Please use a different email.');
-        return;
+      if (!currentAdmin) {
+        throw new Error('Not authenticated');
       }
-      
-      // Generate the next formatted UID
-      const nextFormattedUID = await generateNextFormattedUID();
-      console.log('Generated formatted UID for new admin:', nextFormattedUID);
-      
-      // Generate a unique document ID for the new admin (we'll use this as their UID)
-      const newAdminDocRef = doc(collection(firestore, 'users'));
-      const newAdminUid = newAdminDocRef.id;
-      
-      console.log('Generated document ID for new admin:', newAdminUid);
 
-      // Add admin data to Firestore users collection
-      // The admin will be created as a "pending" account that gets activated when they first log in
-      const adminData = {
+      console.log('Current admin UID:', currentAdmin.uid);
+      
+      // Call Cloud Function to create admin account with Admin SDK privileges
+      const createAdminAccount = httpsCallable(functions, 'createAdminAccount');
+      
+      const result = await createAdminAccount({
         name: adminName.trim(),
         email: adminEmail.trim(),
-        password: adminPassword.trim(), // Store temporarily - in production, this should be hashed
-        userType: 'admin',
-        isOnline: false,
-        uid: newAdminUid,
-        formatted_uid: nextFormattedUID,
-        createdAt: new Date(),
-        createdBy: currentAdminUid || 'system',
-        accountStatus: 'pending', // Will be activated on first login
-        authCreated: false // Auth account not yet created
-      };
-      
-      console.log('Creating admin with data:', adminData);
-      await setDoc(newAdminDocRef, adminData);
-      
-      console.log('Admin document created in Firestore with ID:', newAdminUid);
+        password: adminPassword.trim(),
+        adminUid: currentAdmin.uid
+      });
 
-      // Reset form and close modal
-      setAdminName('');
-      setAdminEmail('');
-      setAdminPassword('');
-      setShowAddAdminModal(false);
-      setShowAddAdminSuccess(true);
+      console.log('Cloud Function result:', result.data);
 
-      // Refresh the users list to show the new admin
-      await fetchUsersWithCurrentUserDetection();
+      if (result.data.success) {
+        // Reset form and close modal
+        setAdminName('');
+        setAdminEmail('');
+        setAdminPassword('');
+        setShowAddAdminModal(false);
+        setShowAddAdminSuccess(true);
 
-      console.log('Admin account created successfully without affecting current session');
+        // Refresh the users list to show the new admin
+        await fetchUsersWithCurrentUserDetection();
+
+        console.log('Admin account created successfully using Cloud Functions');
+      } else {
+        throw new Error(result.data.message || 'Unknown error');
+      }
 
     } catch (error) {
       console.error('Error creating admin account:', error);
       let errorMessage = 'Failed to create admin account. Please try again.';
       
-      if (error.code === 'permission-denied') {
-        errorMessage = 'Permission denied. Please check your admin privileges.';
-      } else if (error.message.includes('email')) {
+      if (error.message.includes('Email already exists')) {
+        errorMessage = 'This email is already registered. Please use a different email.';
+      } else if (error.message.includes('Invalid email')) {
         errorMessage = 'Invalid email address. Please check and try again.';
+      } else if (error.message.includes('weak-password')) {
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (error.message.includes('Unauthorized')) {
+        errorMessage = 'Permission denied. Please check your admin privileges.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       setAddAdminError(errorMessage);
@@ -688,8 +964,14 @@ function UserManagement() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modal}>
+        <div style={{
+          ...styles.modalOverlay,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            ...styles.modal,
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
             <div style={styles.modalIcon}>
               <img src={deleteUserIcon} alt="Delete User" style={styles.deleteIcon} />
             </div>
@@ -699,78 +981,86 @@ function UserManagement() {
             </div>
             <div style={styles.modalButtons}>
               <button 
-                style={styles.cancelBtn}
+                style={{
+                  ...styles.cancelBtn,
+                  opacity: deleteLoading ? 0.6 : 1,
+                  cursor: deleteLoading ? 'not-allowed' : 'pointer'
+                }}
                 onClick={cancelDelete}
+                disabled={deleteLoading}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                  e.target.style.backgroundColor = '#5a6268';
+                  if (!deleteLoading) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                    e.target.style.backgroundColor = '#5a6268';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0px)';
-                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                  e.target.style.backgroundColor = '#6c757d';
+                  if (!deleteLoading) {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.target.style.backgroundColor = '#6c757d';
+                  }
                 }}
               >
                 Cancel
               </button>
               <button 
-                style={styles.confirmDeleteBtn}
+                style={{
+                  ...styles.confirmDeleteBtn,
+                  opacity: deleteLoading ? 0.8 : 1,
+                  cursor: deleteLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
                 onClick={confirmDeleteAccount}
+                disabled={deleteLoading}
                 onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(230, 57, 70, 0.4)';
-                  e.target.style.backgroundColor = '#c82333';
+                  if (!deleteLoading) {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(230, 57, 70, 0.4)';
+                    e.target.style.backgroundColor = '#c82333';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0px)';
-                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                  e.target.style.backgroundColor = '#E63946';
+                  if (!deleteLoading) {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                    e.target.style.backgroundColor = '#E63946';
+                  }
                 }}
               >
-                Delete
+                {deleteLoading && (
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid #fff',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                )}
+                {deleteLoading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Success Confirmation Modal */}
-      {showSuccessModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.successModal}>
-            <div style={styles.modalIcon}>
-              <img src={deleteUserConfirmation} alt="Success" style={styles.successIcon} />
-            </div>
-            <div style={styles.modalContent}>
-              <p style={styles.successMessage}>The account has been successfully removed from the system.</p>
-            </div>
-            <div style={styles.modalButtons}>
-              <button 
-                style={styles.okBtn}
-                onClick={closeSuccessModal}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                  e.target.style.backgroundColor = '#5a6268';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0px)';
-                  e.target.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                  e.target.style.backgroundColor = '#6c757d';
-                }}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Reset Password Modal */}
       {showResetPasswordModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.resetPasswordModal}>
+        <div style={{
+          ...styles.modalOverlay,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            ...styles.resetPasswordModal,
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
             <div style={styles.modalIcon}>
               <img src={resetUserPassIcon} alt="Reset Password" style={styles.resetPasswordIcon} />
             </div>
@@ -912,7 +1202,7 @@ function UserManagement() {
                   }
                 }}
               >
-                {resetPasswordLoading ? 'Sending Email...' : 'Send Reset Email'}
+                {resetPasswordLoading ? 'Resetting...' : 'Reset Password'}
               </button>
             </div>
           </div>
@@ -921,15 +1211,21 @@ function UserManagement() {
 
       {/* Add Admin Modal */}
       {showAddAdminModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.addAdminModal}>
+        <div style={{
+          ...styles.modalOverlay,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            ...styles.addAdminModal,
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
             <div style={styles.modalIcon}>
               <img src={addAdminIcon} alt="Add Admin" style={styles.addAdminIconStyle} />
             </div>
             <h3 style={styles.addAdminTitle}>ADD NEW ADMIN ACCOUNT</h3>
             
             {addAdminError && (
-              <div style={styles.errorMessage}>
+              <div style={styles.addAdminErrorMessage}>
                 {addAdminError}
               </div>
             )}
@@ -1004,7 +1300,7 @@ function UserManagement() {
             <div style={styles.addAdminBtns}>
               <button 
                 onClick={cancelAddAdmin} 
-                style={styles.cancelBtn}
+                style={styles.addAdminCancelBtn}
                 disabled={addAdminLoading}
               >
                 Cancel
@@ -1018,7 +1314,7 @@ function UserManagement() {
                   }
                 }}
                 style={{
-                  ...styles.confirmBtn,
+                  ...styles.addAdminConfirmBtn,
                   opacity: addAdminLoading ? 0.6 : 1,
                   cursor: addAdminLoading ? 'not-allowed' : 'pointer'
                 }}
@@ -1032,31 +1328,223 @@ function UserManagement() {
         </div>
       )}
 
-      {/* Add Admin Success Modal */}
+      {/* Add Admin Success Modal - FIXED */}
       {showAddAdminSuccess && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.successModal}>
-            <div style={styles.modalIcon}>
-              <img src={successIcon} alt="Success" style={styles.successIcon} />
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '30px',
+            textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+            maxWidth: '400px',
+            minWidth: '300px',
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              backgroundColor: '#38B000',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'white',
+              fontSize: '30px',
+              fontWeight: 'bold',
+              animation: 'iconBounce 0.6s ease-out 0.3s both'
+            }}>
+              ✓
             </div>
-            <div style={styles.modalContent}>
-              <h3 style={styles.successTitle}>Success!</h3>
-              <p style={styles.successMessage}>
-                New admin account has been created successfully!
-              </p>
-            </div>
-            <div style={styles.modalButtons}>
-              <button 
-                onClick={closeAddAdminSuccess} 
-                style={styles.successBtn}
-              >
-                OK
-              </button>
-            </div>
+            <h3 style={{
+              color: '#333',
+              fontSize: '20px',
+              marginBottom: '15px',
+              fontFamily: 'Arial, sans-serif'
+            }}>
+              Success!
+            </h3>
+            <p style={{
+              color: '#666',
+              fontSize: '16px',
+              marginBottom: '25px',
+              fontFamily: 'Arial, sans-serif',
+              lineHeight: '1.4'
+            }}>
+              New admin account has been created successfully!
+            </p>
+            <button
+              onClick={closeAddAdminSuccess}
+              style={{
+                backgroundColor: '#38B000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 30px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                transition: 'all 0.3s ease',
+                transform: 'translateY(0px)',
+                boxShadow: '0 2px 8px rgba(56, 176, 0, 0.3)',
+                minWidth: '120px',
+                outline: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#2E8B00';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(56, 176, 0, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#38B000';
+                e.target.style.transform = 'translateY(0px)';
+                e.target.style.boxShadow = '0 2px 8px rgba(56, 176, 0, 0.3)';
+              }}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
 
+      {/* NEW Fresh Success Modal */}
+      {showGeneralSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '30px',
+            textAlign: 'center',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+            maxWidth: '400px',
+            minWidth: '300px',
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              backgroundColor: '#38B000',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px auto',
+              color: 'white',
+              fontSize: '30px',
+              fontWeight: 'bold',
+              animation: 'iconBounce 0.6s ease-out 0.3s both'
+            }}>
+              ✓
+            </div>
+            <h3 style={{
+              color: '#333',
+              fontSize: '20px',
+              marginBottom: '15px',
+              fontFamily: 'Arial, sans-serif'
+            }}>
+              Success!
+            </h3>
+            <p style={{
+              color: '#666',
+              fontSize: '16px',
+              marginBottom: '25px',
+              fontFamily: 'Arial, sans-serif',
+              lineHeight: '1.4'
+            }}>
+              {successMessage}
+            </p>
+            <button
+              onClick={() => setShowGeneralSuccessModal(false)}
+              style={{
+                backgroundColor: '#38B000',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 30px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                transition: 'all 0.3s ease',
+                transform: 'translateY(0px)',
+                boxShadow: '0 2px 8px rgba(56, 176, 0, 0.3)',
+                minWidth: '120px',
+                outline: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = '#2E8B00';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(56, 176, 0, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = '#38B000';
+                e.target.style.transform = 'translateY(0px)';
+                e.target.style.boxShadow = '0 2px 8px rgba(56, 176, 0, 0.3)';
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* General Error Modal */}
+      {showGeneralErrorModal && (
+        <div style={{
+          ...styles.modalOverlay,
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <div style={{
+            ...styles.errorModal,
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            <div style={styles.errorIconContainer}>
+              <div style={styles.customErrorIcon}>!</div>
+            </div>
+            <h3 style={styles.errorTitle}>Error</h3>
+            <p style={styles.errorMessageText}>{errorMessage}</p>
+            <button 
+              onClick={() => setShowGeneralErrorModal(false)}
+              onMouseEnter={() => setErrorBtnHover(true)}
+              onMouseLeave={() => setErrorBtnHover(false)}
+              style={{
+                ...styles.errorBtn,
+                backgroundColor: errorBtnHover ? '#C82333' : '#E63946',
+                transform: errorBtnHover ? 'translateY(-2px)' : 'translateY(0px)',
+                boxShadow: errorBtnHover ? '0 4px 12px rgba(230, 57, 70, 0.4)' : '0 2px 8px rgba(230, 57, 70, 0.3)',
+                border: 'none',
+                outline: 'none'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
     </AdminLayout>
   );
@@ -1092,7 +1580,7 @@ const styles = {
   confirmDeleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 24px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', fontWeight: '500' },
   successModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' },
   successIcon: { width: '60px', height: '60px', animation: 'iconBounce 0.6s ease-out 0.2s both' },
-  successMessage: { fontSize: '16px', color: '#333', margin: '20px 0', lineHeight: '1.4' },
+  successMessage: { fontSize: '20px', color: '#333', margin: '20px 0', lineHeight: '1.4' },
   okBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', fontWeight: '500' },
   resetPasswordModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '450px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
   resetPasswordIcon: { width: '80px', height: '80px', animation: 'iconBounce 0.6s ease-out 0.2s both' },
@@ -1120,13 +1608,23 @@ const styles = {
   addAdminConfirmation: { backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', margin: '20px 0', textAlign: 'left' },
   confirmationText: { fontSize: '14px', color: '#333', margin: 0, lineHeight: '1.4' },
   addAdminBtns: { display: 'flex', gap: '15px', justifyContent: 'center', marginTop: '25px' },
-  cancelBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', fontWeight: '500' },
-  confirmBtn: { backgroundColor: '#38B000', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease' },
-  errorMessage: { backgroundColor: '#f8d7da', color: '#721c24', padding: '10px', borderRadius: '5px', marginBottom: '20px', fontSize: '14px' },
-  successModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
-  successTitle: { fontSize: '20px', fontWeight: 'bold', color: '#28a745', marginBottom: '20px' },
-  successMessage: { fontSize: '16px', color: '#666', marginBottom: '25px' },
-  successBtn: { backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease', transform: 'translateY(0px)' },
+  addAdminCancelBtn: { backgroundColor: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', fontWeight: '500' },
+  addAdminConfirmBtn: { backgroundColor: '#38B000', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease' },
+  addAdminErrorMessage: { backgroundColor: '#f8d7da', color: '#721c24', padding: '10px', borderRadius: '5px', marginBottom: '20px', fontSize: '14px' },
+  // Success Modal Styles
+  generalSuccessModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
+  successIconContainer: { marginBottom: '25px' },
+  customSuccessIcon: { width: '70px', height: '70px', borderRadius: '50%', backgroundColor: '#38B000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', fontWeight: 'bold', margin: '0 auto', animation: 'iconBounce 0.6s ease-out 0.2s both', boxShadow: '0 4px 15px rgba(56, 176, 0, 0.3)' },
+  generalSuccessTitle: { fontSize: '22px', fontWeight: '700', color: '#38B000', marginBottom: '20px', letterSpacing: '0.5px' },
+  generalSuccessMessage: { fontSize: '16px', color: '#666', marginBottom: '25px', whiteSpace: 'pre-line' },
+  generalSuccessBtn: { backgroundColor: '#38B000', color: '#fff', border: 'none', outline: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '16px', fontWeight: '600', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 8px rgba(56, 176, 0, 0.3)', minWidth: '120px', fontFamily: 'inherit', textDecoration: 'none', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' },
+  // Error Modal Styles
+  errorModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
+  errorIconContainer: { marginBottom: '25px' },
+  customErrorIcon: { width: '70px', height: '70px', borderRadius: '50%', backgroundColor: '#E63946', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', fontWeight: 'bold', margin: '0 auto', animation: 'iconBounce 0.6s ease-out 0.2s both', boxShadow: '0 4px 15px rgba(230, 57, 70, 0.3)' },
+  errorTitle: { fontSize: '22px', fontWeight: '700', color: '#E63946', marginBottom: '20px', letterSpacing: '0.5px' },
+  errorMessageText: { fontSize: '16px', color: '#666', marginBottom: '25px', whiteSpace: 'pre-line' },
+  errorBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', outline: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '16px', fontWeight: '600', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 8px rgba(230, 57, 70, 0.3)', minWidth: '120px', fontFamily: 'inherit', textDecoration: 'none', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' },
   // Current User Badge Style
   currentUserBadge: { fontSize: '12px', color: '#28a745', fontWeight: '600', backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: '12px', border: '1px solid #c3e6cb' },
 };

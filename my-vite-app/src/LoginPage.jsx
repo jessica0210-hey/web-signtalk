@@ -73,6 +73,22 @@ function LoginWrapper() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Password hashing function (same as UserManagement.jsx)
+  const createPasswordHash = async (password) => {
+    try {
+      // Simple hash using SubtleCrypto API (available in browsers)
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    } catch (error) {
+      console.warn('Hashing not available, returning plain text password:', error);
+      return password; // Fallback to plain text if hashing fails
+    }
+  };
+
   // Clear session data and handle logout on mount
   useEffect(() => {
     // Clear all session data when login page loads
@@ -237,10 +253,13 @@ function LoginWrapper() {
           let pendingAdmin = null;
           
           // Find pending admin with matching email
+          const hashedInputPassword = await createPasswordHash(password);
           usersSnapshot.docs.forEach(doc => {
             const data = doc.data();
+            // Check both hashed and plain text passwords for compatibility
+            const passwordMatches = (data.password === hashedInputPassword) || (data.password === password);
             if (data.email === email && 
-                data.password === password && 
+                passwordMatches && 
                 data.userType === 'admin' && 
                 data.accountStatus === 'pending' && 
                 data.authCreated === false) {
@@ -300,16 +319,27 @@ function LoginWrapper() {
         console.log(`Found ${usersSnapshot.docs.length} user documents`);
         
         // Find pending admin with matching email and password
+        const hashedInputPassword = await createPasswordHash(password);
+        console.log('Input password hash:', hashedInputPassword);
+        
         usersSnapshot.docs.forEach(doc => {
           const data = doc.data();
+          // Check both hashed and plain text passwords for compatibility
+          const hashedPasswordMatch = data.password === hashedInputPassword;
+          const plainPasswordMatch = data.password === password;
+          const passwordMatches = hashedPasswordMatch || plainPasswordMatch;
+          
           console.log('Checking user:', {
             docId: doc.id,
             email: data.email,
             inputEmail: email,
             emailMatch: data.email === email,
-            password: data.password,
+            storedPassword: data.password,
             inputPassword: password,
-            passwordMatch: data.password === password,
+            hashedInputPassword: hashedInputPassword,
+            hashedPasswordMatch: hashedPasswordMatch,
+            plainPasswordMatch: plainPasswordMatch,
+            passwordMatches: passwordMatches,
             userType: data.userType,
             accountStatus: data.accountStatus,
             authCreated: data.authCreated,
@@ -317,7 +347,7 @@ function LoginWrapper() {
           });
           
           if (data.email === email && 
-              data.password === password && 
+              passwordMatches && 
               data.userType === 'admin' && 
               data.accountStatus === 'pending' && 
               data.authCreated === false) {
