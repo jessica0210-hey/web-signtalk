@@ -542,6 +542,64 @@ function DashboardPage() {
       100% { transform: rotate(360deg);}
     }
     
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes popupSlideIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(-30px);
+      }
+      60% {
+        opacity: 0.9;
+        transform: scale(1.08) translateY(-5px);
+      }
+      80% {
+        opacity: 1;
+        transform: scale(0.98) translateY(2px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0px);
+      }
+    }
+
+    @keyframes iconBounce {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(-10deg);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.1) rotate(5deg);
+      }
+      80% {
+        opacity: 0.9;
+        transform: scale(0.95) rotate(-2deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+      }
+    }
+
+    @keyframes buttonHover {
+      0% {
+        transform: translateY(0px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      100% {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      }
+    }
+
     @keyframes scaleInModal {
       from {
         transform: scale(0.7);
@@ -675,42 +733,82 @@ function DashboardPage() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          animation: 'fadeIn 0.3s ease-out'
         }}>
           <div style={{
             backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            padding: '40px',
+            borderRadius: '15px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
             minWidth: '400px',
             maxWidth: '500px',
-            animation: 'scaleInModal 0.3s ease-out',
-            transform: 'scale(1)',
+            width: '90%',
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
             textAlign: 'center',
             color: '#481872'
           }}>
-            <img 
-              src={dialogImg} 
-              alt="Dialog Illustration" 
-              style={{ width: '100px', marginBottom: '15px' }}
-            />
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <img 
+                src={dialogImg} 
+                alt="Dialog Illustration" 
+                style={{ 
+                  width: '80px', 
+                  height: '80px',
+                  animation: 'iconBounce 0.6s ease-out 0.3s both'
+                }}
+              />
+            </div>
 
             {isActive ? (
               <>
-                <p style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '20px', textAlign:'center'}}>
+                <h3 style={{ 
+                  marginBottom: '15px', 
+                  fontWeight: '600', 
+                  fontSize: '22px', 
+                  textAlign:'center',
+                  color: '#E63946',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
                   Active sessions will be terminated.
-                </p>
-                <p style={{ fontSize: '14px', marginBottom: '20px', textAlign:'center'}}>
+                </h3>
+                <p style={{ 
+                  fontSize: '16px', 
+                  marginBottom: '25px', 
+                  textAlign:'center',
+                  color: '#666',
+                  lineHeight: '1.4',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
                   The system is currently in active mode.<br />
                   The system will remain in maintenance mode.
                 </p>
               </>
             ) : (
               <>
-                <p style={{ marginBottom: '10px', fontWeight: 'bold', fontSize: '20px', textAlign:'center' }}>
+                <h3 style={{ 
+                  marginBottom: '15px', 
+                  fontWeight: '600', 
+                  fontSize: '22px', 
+                  textAlign:'center',
+                  color: '#FFC107',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
                   The system is currently in maintenance mode.
-                </p>
-                <p style={{ fontSize: '14px', marginBottom: '20px', textAlign:'center'}}>
+                </h3>
+                <p style={{ 
+                  fontSize: '16px', 
+                  marginBottom: '25px', 
+                  textAlign:'center',
+                  color: '#666',
+                  lineHeight: '1.4',
+                  fontFamily: 'Arial, sans-serif'
+                }}>
                   Reactivation will bring all services back online and make the system available to users.
                 </p>
               </>
@@ -750,20 +848,94 @@ function DashboardPage() {
                 </p>
               )}
 
-              <div>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
                 <button 
                   type="button" 
                   onClick={handleCancel} 
-                  style={{ marginRight: '10px', width: '100px', height: '40px', border: '1px solid #ccc', background: 'transparent', color: '#481872', padding: '6px 12px', borderRadius: '5px' }}
+                  style={{ 
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 30px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease',
+                    transform: 'translateY(0px)',
+                    minWidth: '120px',
+                    outline: 'none',
+                    backgroundColor: '#6c757d',
+                    color: '#fff',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                    fontFamily: 'Arial, sans-serif'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#5a6268';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#6c757d';
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                  }}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  style={{ background: 'green', color: 'white', padding: '6px 12px', borderRadius: '5px', width: '100px', height: '40px', border: '1px solid green'}}
+                  style={{ 
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 30px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease',
+                    transform: 'translateY(0px)',
+                    minWidth: '120px',
+                    outline: 'none',
+                    backgroundColor: loading ? '#95a5a6' : '#38B000',
+                    color: '#fff',
+                    boxShadow: loading ? '0 2px 4px rgba(0, 0, 0, 0.1)' : '0 2px 8px rgba(56, 176, 0, 0.3)',
+                    opacity: loading ? 0.7 : 1,
+                    fontFamily: 'Arial, sans-serif'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!loading) {
+                      e.target.style.backgroundColor = '#2E8B00';
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(56, 176, 0, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loading) {
+                      e.target.style.backgroundColor = '#38B000';
+                      e.target.style.transform = 'translateY(0px)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(56, 176, 0, 0.3)';
+                    }
+                  }}
                   disabled={loading}
                 >
-                  Confirm
+                  {loading ? (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #fff',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      Confirming...
+                    </div>
+                  ) : (
+                    'Confirm'
+                  )}
                 </button>
               </div>
             </form>
@@ -783,20 +955,21 @@ function DashboardPage() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          zIndex: 1002
+          zIndex: 1002,
+          animation: 'fadeIn 0.3s ease-out'
         }}>
           <div style={{
             backgroundColor: 'white',
             padding: '40px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            borderRadius: '15px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
             width: '600px',
+            maxWidth: '90%',
             maxHeight: '80vh',
             overflowY: 'auto',
             textAlign: 'center',
             position: 'relative',
-            animation: 'scaleInModal 0.3s ease-out',
-            transform: 'scale(1)'
+            animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}>
             {/* Close button */}
             <button

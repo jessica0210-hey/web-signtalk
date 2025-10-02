@@ -95,6 +95,10 @@ const modalAnimations = `
       transform: scale(1) rotate(0deg);
     }
   }
+
+  .tab-content-slide {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+  }
   
   /* Button reset styles */
   button {
@@ -259,6 +263,8 @@ function UserManagement() {
   const [activeTab, setActiveTab] = useState("users");
   const [users, setUsers] = useState([]);
   const [admins, setAdmins] = useState([]);
+  const [isSliding, setIsSliding] = useState(false);
+  const [slideDirection, setSlideDirection] = useState("right");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -363,6 +369,21 @@ function UserManagement() {
       console.warn('Hashing not available, storing plain text password:', error);
       return password; // Fallback to plain text if hashing fails
     }
+  };
+
+  // Smooth tab change handler
+  const handleTabChange = (newTab) => {
+    if (newTab === activeTab || isSliding) return;
+    
+    // Determine slide direction based on tab change
+    const slideRight = (activeTab === "users" && newTab === "admins");
+    setSlideDirection(slideRight ? "right" : "left");
+    
+    setIsSliding(true);
+    setTimeout(() => {
+      setActiveTab(newTab);
+      setIsSliding(false);
+    }, 250);
   };
 
   // Helper functions for modals
@@ -715,6 +736,10 @@ function UserManagement() {
 
   // Add Admin Functions
   const handleAddAdmin = () => {
+    // Clear form fields when opening modal
+    setAdminName('');
+    setAdminEmail('');
+    setAdminPassword('');
     setShowPassword(false); // Reset password visibility
     setShowAddAdminModal(true);
     setAddAdminError('');
@@ -841,23 +866,28 @@ function UserManagement() {
     <AdminLayout title="USER MANAGEMENT">
       <div style={styles.container}>
         <div style={styles.headerRow}>
-          <div style={styles.tabs}>
+          <div style={styles.tabsContainer}>
+            {/* Sliding background selector */}
+            <div 
+              style={{
+                ...styles.tabSelector,
+                transform: `translateX(${activeTab === "users" ? "0%" : "100%"})`
+              }}
+            />
             <button
-              onClick={() => setActiveTab("users")}
+              onClick={() => handleTabChange("users")}
               style={{
                 ...styles.tabBtn,
-                backgroundColor: activeTab === "users" ? "#fff" : "transparent",
-                color: activeTab === "users" ? "#6F22A3" : "#fff",
+                color: activeTab === "users" ? "#6F22A3" : "#fff"
               }}
             >
               Users
             </button>
             <button
-              onClick={() => setActiveTab("admins")}
+              onClick={() => handleTabChange("admins")}
               style={{
                 ...styles.tabBtn,
-                backgroundColor: activeTab === "admins" ? "#fff" : "transparent",
-                color: activeTab === "admins" ? "#6F22A3" : "#fff",
+                color: activeTab === "admins" ? "#6F22A3" : "#fff"
               }}
             >
               Admin
@@ -884,7 +914,15 @@ function UserManagement() {
         </div>
 
         {/* Table */}
-        <div style={styles.tableWrapper}>
+        <div 
+          key={activeTab}
+          className="tab-content-slide"
+          style={{
+            ...styles.tableWrapper,
+            transform: isSliding ? `translateX(${slideDirection === "left" ? "-80px" : "80px"})` : 'translateX(0px)',
+            opacity: isSliding ? 0.7 : 1
+          }}
+        >
           {/* Fixed header */}
           <table style={styles.table}>
             <thead>
@@ -1068,8 +1106,7 @@ function UserManagement() {
               <h3 style={styles.modalTitle}>Reset User Password</h3>
               <p style={styles.modalSubtitle}>
                 Reset password for: {userToResetPassword?.name || userToResetPassword?.email}
-              </p>
-              <p style={{ ...styles.modalSubtitle, fontSize: '14px', color: '#666', marginTop: '10px' }}>
+                <br />
                 Enter a new password for this user account.
               </p>
               
@@ -1553,8 +1590,38 @@ function UserManagement() {
 const styles = {
   container: { borderRadius: '20px', padding: '20px', margin: '20px', color: '#fff' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' },
-  tabs: { display: 'flex', gap: '10px' },
-  tabBtn: { padding: '10px 20px', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' },
+  tabsContainer: { 
+    display: 'flex', 
+    position: 'relative',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '12px',
+    padding: '4px',
+    gap: '0px'
+  },
+  tabSelector: {
+    position: 'absolute',
+    top: '4px',
+    left: '4px',
+    width: 'calc(50% - 4px)',
+    height: 'calc(100% - 8px)',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    zIndex: 1
+  },
+  tabBtn: { 
+    padding: '10px 20px', 
+    border: 'none', 
+    backgroundColor: 'transparent',
+    cursor: 'pointer', 
+    fontWeight: 'bold', 
+    fontSize: '16px',
+    borderRadius: '8px',
+    position: 'relative',
+    zIndex: 2,
+    flex: 1,
+    transition: 'color 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+  },
   searchBox: { display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.28)', borderRadius: '25px', paddingLeft: '15px', paddingRight: '15px', width: '350px', height: '45px', color: '#fff' },
   searchIcon: { width: '20px', filter: 'brightness(0) invert(1)' },
   searchInput: { border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '16px', color: '#fff' },

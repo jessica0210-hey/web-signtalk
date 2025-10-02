@@ -5,6 +5,7 @@ import headerImage from '../assets/headerImage.png';
 import logo from '../assets/signtalk_logo.png';
 import profileBtn from '../assets/profile.png'; 
 import logoutBtn from '../assets/logout_btn.png';
+import dialogImg from '../assets/dialogImg.png';
 import { auth, firestore } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, getDocFromServer } from 'firebase/firestore'; 
@@ -23,15 +24,47 @@ const modalAnimations = `
   @keyframes popupSlideIn {
     0% {
       opacity: 0;
-      transform: scale(0.7) translateY(-20px);
+      transform: scale(0.5) translateY(-30px);
     }
-    50% {
-      opacity: 0.8;
-      transform: scale(1.05) translateY(-10px);
+    60% {
+      opacity: 0.9;
+      transform: scale(1.08) translateY(-5px);
+    }
+    80% {
+      opacity: 1;
+      transform: scale(0.98) translateY(2px);
     }
     100% {
       opacity: 1;
       transform: scale(1) translateY(0px);
+    }
+  }
+
+  @keyframes iconBounce {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) rotate(-10deg);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1) rotate(5deg);
+    }
+    80% {
+      opacity: 0.9;
+      transform: scale(0.95) rotate(-2deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  @keyframes spin {
+    0% { 
+      transform: rotate(0deg); 
+    }
+    100% { 
+      transform: rotate(360deg); 
     }
   }
 `;
@@ -150,34 +183,19 @@ function AdminLayout({ children, title }) {
   const popupStyle = {
     backgroundColor: '#fff',
     borderRadius: '15px',
-    padding: '0',
-    maxWidth: '420px',
+    padding: '40px',
+    maxWidth: '400px',
     width: '90%',
     textAlign: 'center',
     animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
     transform: 'scale(1)',
     boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
     border: 'none',
-    overflow: 'hidden',
     zIndex: 1001,
     fontFamily: 'Arial, sans-serif'
   };
 
-  const popupHeaderStyle = {
-    backgroundColor: '#6D2593',
-    color: 'white',
-    padding: '20px',
-    fontSize: '18px',
-    fontWeight: '600',
-    margin: '0',
-    textAlign: 'center'
-  };
 
-  const popupBodyStyle = {
-    padding: '30px 25px 25px 25px',
-    textAlign: 'center',
-    color: '#333'
-  };
 
   const logoutBtnStyle = {
     width: '140px', 
@@ -191,30 +209,36 @@ function AdminLayout({ children, title }) {
   };
 
   const confirmLogoutBtnStyle = {
-    padding: '12px 24px',
-    borderRadius: '8px',
     border: 'none',
-    backgroundColor: '#6D2593',
-    color: 'white',
+    borderRadius: '8px',
+    padding: '12px 30px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500',
     transition: 'all 0.3s ease',
     transform: 'translateY(0px)',
-    minWidth: '100px'
+    minWidth: '120px',
+    outline: 'none',
+    backgroundColor: '#38B000',
+    color: '#fff',
+    boxShadow: '0 2px 8px rgba(56, 176, 0, 0.3)',
+    fontFamily: 'Arial, sans-serif'
   };
   const cancelLogoutBtnStyle = {
-    padding: '12px 24px',
+    border: 'none',
     borderRadius: '8px',
-    border: '1px solid #6c757d',
-    backgroundColor: 'white',
-    color: '#6c757d',
+    padding: '12px 30px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: '500',
     transition: 'all 0.3s ease',
     transform: 'translateY(0px)',
-    minWidth: '100px'
+    minWidth: '120px',
+    outline: 'none',
+    backgroundColor: '#6c757d',
+    color: '#fff',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    fontFamily: 'Arial, sans-serif'
   };
 
   useEffect(() => {
@@ -305,7 +329,17 @@ function AdminLayout({ children, title }) {
           <img src={logo} alt="Logo" style={logoStyle} onClick={() => navigate('/dashboardPage')} />
           {/* Render "Hello Admin {name}!" only on Dashboard page */}
           {location.pathname === '/dashboardPage' && (
-            <span style={greetings}>Hello Admin {adminName}!</span>
+            <span style={{
+              fontSize: '25px',
+              fontWeight: '700',
+              color: '#fff',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+              letterSpacing: '0.4px',
+              margin: 0,
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }}>
+              Hello, Admin {adminName}!
+            </span>
           )}
         </div>
 
@@ -335,74 +369,94 @@ function AdminLayout({ children, title }) {
       {showLogoutPopup && (
         <div style={popupNotifStyle}>
           <div style={popupStyle}>
-            <div style={popupHeaderStyle}>Confirmation</div>
-            <div style={popupBodyStyle}>
-              <p style={{ 
-                fontSize: '16px', 
-                margin: '0 0 25px 0',
-                lineHeight: '1.5',
-                color: loggingOut ? '#666' : '#333'
-              }}>
-                {loggingOut ? 'Logging out...' : 'Are you sure you want to logout?'}
-              </p>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center',
-                gap: '15px',
-                marginTop: '20px'
-              }}>
-                <button 
-                  onClick={cancelLogout} 
+            <img 
+              src={dialogImg} 
+              alt="Dialog Illustration" 
+              style={{ 
+                width: '80px', 
+                height: '80px',
+                marginBottom: '20px',
+                animation: 'iconBounce 0.6s ease-out 0.3s both'
+              }}
+            />
+            
+            <h3 style={{
+              color: '#333',
+              fontSize: '20px',
+              marginBottom: '15px',
+              fontFamily: 'Arial, sans-serif',
+              fontWeight: '600'
+            }}>
+              Logout Confirmation
+            </h3>
+            
+            <p style={{
+              color: '#666',
+              fontSize: '16px',
+              marginBottom: '25px',
+              fontFamily: 'Arial, sans-serif',
+              lineHeight: '1.4'
+            }}>
+              {loggingOut ? 'Please wait while we securely log you out...' : 'Are you sure you want to logout?'}
+            </p>
+
+            {!loggingOut ? (
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  className="modal-btn modal-btn-cancel"
+                  onClick={cancelLogout}
                   style={cancelLogoutBtnStyle}
-                  disabled={loggingOut}
                   onMouseEnter={(e) => {
-                    if (!loggingOut) {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                      e.target.style.backgroundColor = '#5a6268';
-                      e.target.style.borderColor = '#5a6268';
-                      e.target.style.color = 'white';
-                    }
+                    e.target.style.backgroundColor = '#5a6268';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
                   }}
                   onMouseLeave={(e) => {
-                    if (!loggingOut) {
-                      e.target.style.transform = 'translateY(0px)';
-                      e.target.style.boxShadow = 'none';
-                      e.target.style.backgroundColor = 'white';
-                      e.target.style.borderColor = '#6c757d';
-                      e.target.style.color = '#6c757d';
-                    }
+                    e.target.style.backgroundColor = '#6c757d';
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                   }}
                 >
                   Cancel
                 </button>
-                <button 
-                  onClick={confirmLogout} 
-                  style={{
-                    ...confirmLogoutBtnStyle,
-                    opacity: loggingOut ? 0.6 : 1,
-                    cursor: loggingOut ? 'not-allowed' : 'pointer'
-                  }}
-                  disabled={loggingOut}
+                <button
+                  className="modal-btn modal-btn-success"
+                  onClick={confirmLogout}
+                  style={confirmLogoutBtnStyle}
                   onMouseEnter={(e) => {
-                    if (!loggingOut) {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(109, 37, 147, 0.4)';
-                      e.target.style.backgroundColor = '#5d1c87';
-                    }
+                    e.target.style.backgroundColor = '#2E8B00';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(56, 176, 0, 0.4)';
                   }}
                   onMouseLeave={(e) => {
-                    if (!loggingOut) {
-                      e.target.style.transform = 'translateY(0px)';
-                      e.target.style.boxShadow = 'none';
-                      e.target.style.backgroundColor = '#6D2593';
-                    }
+                    e.target.style.backgroundColor = '#38B000';
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 2px 8px rgba(56, 176, 0, 0.3)';
                   }}
                 >
-                  {loggingOut ? 'Please wait...' : 'Confirm'}
+                  Confirm
                 </button>
               </div>
-            </div>
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                fontSize: '14px',
+                color: '#666'
+              }}>
+                <div style={{
+                  width: '16px',
+                  height: '16px',
+                  border: '2px solid #fff',
+                  borderTop: '2px solid transparent',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                Processing...
+              </div>
+            )}
           </div>
         </div>
       )}
