@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { auth, firestore } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import bgImage from './assets/background.png';
 import headerImage from './assets/headerImage.png';
 import logo from './assets/signtalk_logo.png';
@@ -11,6 +13,30 @@ import chartIcon from './assets/chart_icon.png';
 function Settings() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
+  const [adminName, setAdminName] = useState('');
+
+  // Fetch admin name from Firestore
+  useEffect(() => {
+    const fetchAdminName = async () => {
+      if (auth.currentUser) {
+        try {
+          const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setAdminName(userData.name || 'Admin');
+          } else {
+            setAdminName('Admin');
+          }
+        } catch (error) {
+          console.error('Error fetching admin name:', error);
+          setAdminName('Admin');
+        }
+      }
+    };
+
+    fetchAdminName();
+  }, []);
 
   const handleLogout = () => navigate('/');
   const handleLogoClick = () => navigate('/dashboard');
@@ -135,7 +161,7 @@ function Settings() {
       <div style={headerStyle}>
         <div style={leftHeader}>
           <img src={logo} alt="Logo" style={logoStyle} onClick={handleLogoClick} />
-          <span style={greetings}>Hello Admin!</span>
+          <span style={greetings}>Hello Admin {adminName}!</span>
         </div>
       </div>
 

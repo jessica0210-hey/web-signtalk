@@ -5,8 +5,46 @@ import headerImage from '../assets/headerImage.png';
 import logo from '../assets/signtalk_logo.png';
 import profileBtn from '../assets/profile.png'; 
 import logoutBtn from '../assets/logout_btn.png';
-import { auth } from '../firebase';
-import { signOut } from 'firebase/auth'; 
+import { auth, firestore } from '../firebase';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, getDocFromServer } from 'firebase/firestore'; 
+
+// Add CSS animations for modal effects
+const modalAnimations = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes popupSlideIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.7) translateY(-20px);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05) translateY(-10px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0px);
+    }
+  }
+`;
+
+// Inject animations into document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = modalAnimations;
+  if (!document.head.querySelector('style[data-logout-modal-animations]')) {
+    styleElement.setAttribute('data-logout-modal-animations', 'true');
+    document.head.appendChild(styleElement);
+  }
+}
 
 function AdminLayout({ children, title }) {
   const navigate = useNavigate();
@@ -15,7 +53,48 @@ function AdminLayout({ children, title }) {
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [adminName, setAdminName] = useState('');
   const dropdownRef = useRef(null);
+
+  // Listen to auth state changes and fetch admin name accordingly
+  useEffect(() => {
+    const fetchAdminName = async (user) => {
+      if (user) {
+        try {
+          console.log('Auth state changed - Fetching admin name for UID:', user.uid);
+          console.log('Current user email:', user.email);
+          
+          const userDocRef = doc(firestore, 'users', user.uid);
+          const userDoc = await getDocFromServer(userDocRef); // Force fresh data from server
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log('Found user data:', userData);
+            console.log('Setting admin name to:', userData.name || 'Admin');
+            setAdminName(userData.name || 'Admin');
+          } else {
+            console.log('No user document found for UID:', user.uid);
+            setAdminName('Admin');
+          }
+        } catch (error) {
+          console.error('Error fetching admin name:', error);
+          setAdminName('Admin');
+        }
+      } else {
+        console.log('No current user found');
+        setAdminName('Admin');
+      }
+    };
+
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user?.email || 'No user');
+      fetchAdminName(user);
+    });
+
+    // Cleanup listener on component unmount
+    return () => unsubscribe();
+  }, []);
 
   const bgStyle = {
     backgroundImage: `url(${bgImage})`,
@@ -60,34 +139,44 @@ function AdminLayout({ children, title }) {
     left: 0,
     width: '100vw',
     height: '100vh',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 999
+    zIndex: 1000,
+    animation: 'fadeIn 0.3s ease-out'
   };
 
   const popupStyle = {
-    backgroundColor: 'white',
-    borderRadius: '16px',
-    width: '300px',
-    height: 'auto',
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+    backgroundColor: '#fff',
+    borderRadius: '15px',
+    padding: '0',
+    maxWidth: '420px',
+    width: '90%',
+    textAlign: 'center',
+    animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transform: 'scale(1)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+    border: 'none',
     overflow: 'hidden',
-    zIndex: 1000
+    zIndex: 1001,
+    fontFamily: 'Arial, sans-serif'
   };
 
   const popupHeaderStyle = {
     backgroundColor: '#6D2593',
     color: 'white',
-    padding: '15px',
-    fontSize: '16px'
+    padding: '20px',
+    fontSize: '18px',
+    fontWeight: '600',
+    margin: '0',
+    textAlign: 'center'
   };
 
   const popupBodyStyle = {
-    padding: '10px',
+    padding: '30px 25px 25px 25px',
     textAlign: 'center',
-    color: '#2d006a'
+    color: '#333'
   };
 
   const logoutBtnStyle = {
@@ -102,20 +191,30 @@ function AdminLayout({ children, title }) {
   };
 
   const confirmLogoutBtnStyle = {
-    padding: '8px 16px',
+    padding: '12px 24px',
     borderRadius: '8px',
     border: 'none',
     backgroundColor: '#6D2593',
     color: 'white',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.3s ease',
+    transform: 'translateY(0px)',
+    minWidth: '100px'
   };
   const cancelLogoutBtnStyle = {
-    padding: '8px 16px',
+    padding: '12px 24px',
     borderRadius: '8px',
-    border: '1px solid #6D2593',
+    border: '1px solid #6c757d',
     backgroundColor: 'white',
-    color: '#6D2593',
-    cursor: 'pointer'
+    color: '#6c757d',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '500',
+    transition: 'all 0.3s ease',
+    transform: 'translateY(0px)',
+    minWidth: '100px'
   };
 
   useEffect(() => {
@@ -204,9 +303,9 @@ function AdminLayout({ children, title }) {
       <header style={headerStyle}>
         <div style={leftHeaderStyle}>
           <img src={logo} alt="Logo" style={logoStyle} onClick={() => navigate('/dashboardPage')} />
-          {/* Render "Hello Admin!" only on Dashboard page */}
+          {/* Render "Hello Admin {name}!" only on Dashboard page */}
           {location.pathname === '/dashboardPage' && (
-            <span style={greetings}>Hello Admin!</span>
+            <span style={greetings}>Hello Admin {adminName}!</span>
           )}
         </div>
 
@@ -238,14 +337,42 @@ function AdminLayout({ children, title }) {
           <div style={popupStyle}>
             <div style={popupHeaderStyle}>Confirmation</div>
             <div style={popupBodyStyle}>
-              <p style={{ fontSize: '16px', padding: '6px' }}>
+              <p style={{ 
+                fontSize: '16px', 
+                margin: '0 0 25px 0',
+                lineHeight: '1.5',
+                color: loggingOut ? '#666' : '#333'
+              }}>
                 {loggingOut ? 'Logging out...' : 'Are you sure you want to logout?'}
               </p>
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '15px' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                gap: '15px',
+                marginTop: '20px'
+              }}>
                 <button 
                   onClick={cancelLogout} 
                   style={cancelLogoutBtnStyle}
                   disabled={loggingOut}
+                  onMouseEnter={(e) => {
+                    if (!loggingOut) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                      e.target.style.backgroundColor = '#5a6268';
+                      e.target.style.borderColor = '#5a6268';
+                      e.target.style.color = 'white';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loggingOut) {
+                      e.target.style.transform = 'translateY(0px)';
+                      e.target.style.boxShadow = 'none';
+                      e.target.style.backgroundColor = 'white';
+                      e.target.style.borderColor = '#6c757d';
+                      e.target.style.color = '#6c757d';
+                    }
+                  }}
                 >
                   Cancel
                 </button>
@@ -257,6 +384,20 @@ function AdminLayout({ children, title }) {
                     cursor: loggingOut ? 'not-allowed' : 'pointer'
                   }}
                   disabled={loggingOut}
+                  onMouseEnter={(e) => {
+                    if (!loggingOut) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(109, 37, 147, 0.4)';
+                      e.target.style.backgroundColor = '#5d1c87';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!loggingOut) {
+                      e.target.style.transform = 'translateY(0px)';
+                      e.target.style.boxShadow = 'none';
+                      e.target.style.backgroundColor = '#6D2593';
+                    }
+                  }}
                 >
                   {loggingOut ? 'Please wait...' : 'Confirm'}
                 </button>

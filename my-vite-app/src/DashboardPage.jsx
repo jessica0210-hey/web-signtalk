@@ -44,7 +44,7 @@ function AnimatedNumber({ value, duration = 300 }) {
 }
 
 // UserStatsChart component for the popup
-function UserStatsChart({ userType, totalUsers, hearingUsers, nonHearingUsers, activeUsers, inactiveUsers }) {
+function UserStatsChart({ userType, totalUsers, hearingUsers, nonHearingUsers, activeUsers, inactiveUsers, adminUsers }) {
   const [animationDelay, setAnimationDelay] = useState(0);
 
   const getUserTypeInfo = () => {
@@ -83,6 +83,13 @@ function UserStatsChart({ userType, totalUsers, hearingUsers, nonHearingUsers, a
           value: inactiveUsers,
           color: '#E74C3C',
           description: 'Currently inactive users'
+        };
+      case 'admin':
+        return {
+          title: 'Admin Users',
+          value: adminUsers,
+          color: '#FF6B35',
+          description: 'System administrators'
         };
       default:
         return {
@@ -223,6 +230,10 @@ function UserStatsChart({ userType, totalUsers, hearingUsers, nonHearingUsers, a
             <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#9B59B6' }}>{nonHearingUsers}</div>
             <div style={{ fontSize: '12px', color: '#666' }}>Non-Hearing</div>
           </div>
+          <div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#FF6B35' }}>{adminUsers}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>Admin</div>
+          </div>
         </div>
       </div>
     </div>
@@ -243,6 +254,7 @@ function DashboardPage() {
   const [nonHearingUsers, setNonHearingUsers] = useState(0);
   const [inactiveUsers, setInactiveUsers] = useState(0);
   const [activeUsers, setActiveUsers] = useState(0);
+  const [adminUsers, setAdminUsers] = useState(0);
   
   // New states for user statistics popup
   const [isUserStatsPopupOpen, setIsUserStatsPopupOpen] = useState(false);
@@ -277,27 +289,37 @@ function DashboardPage() {
         let nonHearing = 0;
         let inactive = 0;
         let active = 0;
-        let total = snapshot.size;
+        let admins = 0;
+        let regularUsers = 0;
 
         snapshot.forEach(doc => {
           const data = doc.data();
-          if (data.userType === "Hearing") hearing++;
-          if (data.userType === "Non-Hearing") nonHearing++;
+          if (data.userType === "admin") {
+            admins++;
+          } else {
+            regularUsers++;
+            if (data.userType === "Hearing") hearing++;
+            if (data.userType === "Non-Hearing") nonHearing++;
+          }
           if (data.isOnline === false) inactive++;
           if (data.isOnline === true) active++;
         });
 
+        const total = regularUsers + admins; // Total includes both regular users and admins
+        
         setTotalUsers(total);
         setHearingUsers(hearing);
         setNonHearingUsers(nonHearing);
         setInactiveUsers(inactive);
         setActiveUsers(active);
+        setAdminUsers(admins);
       } catch {
         setTotalUsers(0);
         setHearingUsers(0);
         setNonHearingUsers(0);
         setInactiveUsers(0);
         setActiveUsers(0);
+        setAdminUsers(0);
       } finally {
         setLoading(false);
       }
@@ -801,6 +823,7 @@ function DashboardPage() {
               nonHearingUsers={nonHearingUsers}
               activeUsers={activeUsers}
               inactiveUsers={inactiveUsers}
+              adminUsers={adminUsers}
             />
           </div>
         </div>

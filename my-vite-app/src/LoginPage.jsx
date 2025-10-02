@@ -12,7 +12,7 @@ import UserManagement from './UserManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import { auth, firestore } from './firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, setDoc } from "firebase/firestore";
 
 function LoginWrapper() {
   const navigate = useNavigate();
@@ -152,22 +152,204 @@ function LoginWrapper() {
     e.preventDefault();
     setErrorMsg('');
     setLoading(true); // Start loading
+    
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      // Check userType in Firestore
-      const userDocRef = doc(firestore, 'users', user.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists() && userDoc.data().userType === 'admin') {
-        // Clear browser history and navigate to dashboard
-        window.history.replaceState(null, '', '/dashboardPage');
-        navigate('/dashboardPage', { replace: true });
-      } else {
-        setErrorMsg('Access denied. Only admin users can log in.');
+      // First, try regular Firebase Auth login
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        console.log('Firebase Auth successful for user:', user.uid);
+        
+        // Check userType in Firestore
+        const userDocRef = doc(firestore, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        console.log('User document exists:', userDoc.exists());
+        if (userDoc.exists()) {
+          console.log('User document data:', userDoc.data());
+        }
+        
+        if (userDoc.exists() && userDoc.data().userType === 'admin') {
+          // Clear browser history and navigate to dashboard
+          window.history.replaceState(null, '', '/dashboardPage');
+          navigate('/dashboardPage', { replace: true });
+          return;
+        } else if (!userDoc.exists()) {
+          console.log('User document does not exist, checking for pending admin account...');
+          // Sign out the current user first since we need to check for pending admin
+          await auth.signOut();
+          
+          // Check if this is a pending admin account
+          const usersRef = collection(firestore, 'users');
+          const usersSnapshot = await getDocs(usersRef);
+          let pendingAdmin = null;
+          
+          // Find pending admin with matching email
+          usersSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.email === email && 
+                data.password === password && 
+                data.userType === 'admin' && 
+                data.accountStatus === 'pending' && 
+                data.authCreated === false) {
+              console.log('Found matching pending admin during Firebase Auth success!');
+              pendingAdmin = { id: doc.id, ...data };
+            }
+          });
+          
+          if (pendingAdmin) {
+            console.log('Migrating pending admin to existing Firebase Auth account...');
+            
+            // Sign back in to get the Firebase Auth user
+            const userCredential2 = await signInWithEmailAndPassword(auth, email, password);
+            const existingAuthUser = userCredential2.user;
+            
+            // Create new document with existing Firebase Auth UID
+            const { password: _, ...adminDataWithoutPassword } = pendingAdmin;
+            await setDoc(doc(firestore, 'users', existingAuthUser.uid), {
+              ...adminDataWithoutPassword,
+              uid: existingAuthUser.uid,
+              accountStatus: 'active',
+              authCreated: true,
+              activatedAt: new Date()
+            });
+            
+            // Delete the old pending document
+            const { deleteDoc } = await import('firebase/firestore');
+            await deleteDoc(doc(firestore, 'users', pendingAdmin.id));
+            
+            console.log('Admin account activated with existing Firebase Auth UID');
+            
+            // Navigate to dashboard
+            window.history.replaceState(null, '', '/dashboardPage');
+            navigate('/dashboardPage', { replace: true });
+            return;
+          } else {
+            console.log('No pending admin found for existing Firebase Auth account');
+            setErrorMsg('Access denied. Only admin users can log in.');
+            return;
+          }
+        } else {
+          console.log('Access denied - user document exists but not admin');
+          setErrorMsg('Access denied. Only admin users can log in.');
+          await auth.signOut();
+          return;
+        }
+      } catch (authError) {
+        console.log('Firebase Auth login failed with error:', authError.code, authError.message);
+        console.log('Firebase Auth login failed, checking for pending admin account...');
+        
+        // If Firebase Auth fails, check if this is a pending admin account
+        console.log('Checking for pending admin accounts...');
+        const usersRef = collection(firestore, 'users');
+        const usersSnapshot = await getDocs(usersRef);
+        let pendingAdmin = null;
+        
+        console.log(`Found ${usersSnapshot.docs.length} user documents`);
+        
+        // Find pending admin with matching email and password
+        usersSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          console.log('Checking user:', {
+            docId: doc.id,
+            email: data.email,
+            inputEmail: email,
+            emailMatch: data.email === email,
+            password: data.password,
+            inputPassword: password,
+            passwordMatch: data.password === password,
+            userType: data.userType,
+            accountStatus: data.accountStatus,
+            authCreated: data.authCreated,
+            hasPassword: !!data.password
+          });
+          
+          if (data.email === email && 
+              data.password === password && 
+              data.userType === 'admin' && 
+              data.accountStatus === 'pending' && 
+              data.authCreated === false) {
+            console.log('Found matching pending admin!');
+            pendingAdmin = { id: doc.id, ...data };
+          }
+        });
+        
+        console.log('Pending admin search result:', pendingAdmin);
+        
+        if (pendingAdmin) {
+          console.log('Found pending admin account...');
+          
+          // Check if Firebase Auth account already exists
+          try {
+            // Try to create Firebase Auth account
+            const { createUserWithEmailAndPassword } = await import('firebase/auth');
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const newAuthUser = userCredential.user;
+            
+            console.log('Created new Firebase Auth account with UID:', newAuthUser.uid);
+            
+            // Create new document with Firebase Auth UID as document ID
+            const { password: _, ...adminDataWithoutPassword } = pendingAdmin;
+            await setDoc(doc(firestore, 'users', newAuthUser.uid), {
+              ...adminDataWithoutPassword,
+              uid: newAuthUser.uid,
+              accountStatus: 'active',
+              authCreated: true,
+              activatedAt: new Date()
+            });
+            
+            // Delete the old pending document
+            const { deleteDoc } = await import('firebase/firestore');
+            await deleteDoc(doc(firestore, 'users', pendingAdmin.id));
+            
+          } catch (authCreateError) {
+            if (authCreateError.code === 'auth/email-already-in-use') {
+              console.log('Firebase Auth account already exists, signing in instead...');
+              
+              // Sign in with existing account
+              const userCredential = await signInWithEmailAndPassword(auth, email, password);
+              const existingAuthUser = userCredential.user;
+              
+              console.log('Signed in with existing Firebase Auth UID:', existingAuthUser.uid);
+              
+              // Create new document with existing Firebase Auth UID
+              const { password: _, ...adminDataWithoutPassword } = pendingAdmin;
+              await setDoc(doc(firestore, 'users', existingAuthUser.uid), {
+                ...adminDataWithoutPassword,
+                uid: existingAuthUser.uid,
+                accountStatus: 'active',
+                authCreated: true,
+                activatedAt: new Date()
+              });
+              
+              // Delete the old pending document
+              const { deleteDoc } = await import('firebase/firestore');
+              await deleteDoc(doc(firestore, 'users', pendingAdmin.id));
+            } else {
+              throw authCreateError;
+            }
+          }
+          
+          console.log('Admin account activated successfully');
+          
+          // Navigate to dashboard
+          window.history.replaceState(null, '', '/dashboardPage');
+          navigate('/dashboardPage', { replace: true });
+          return;
+        }
+        
+        // If no pending admin found, show error
+        setErrorMsg('Incorrect Username or Password. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrorMsg('An error occurred during login. Please try again.');
+      
+      // If there was an error during Firebase Auth creation, sign out
+      if (auth.currentUser) {
         await auth.signOut();
       }
-    } catch {
-      setErrorMsg('Incorrect Username or Password. Please try again.');
     } finally {
       setLoading(false); // Stop loading
     }
