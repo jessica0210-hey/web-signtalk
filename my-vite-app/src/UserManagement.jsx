@@ -741,8 +741,15 @@ function UserManagement() {
     setAdminEmail('');
     setAdminPassword('');
     setShowPassword(false); // Reset password visibility
-    setShowAddAdminModal(true);
     setAddAdminError('');
+    setShowAddAdminModal(true);
+    
+    // Force clear fields after modal opens to prevent autofill
+    setTimeout(() => {
+      setAdminName('');
+      setAdminEmail('');
+      setAdminPassword('');
+    }, 100);
   };
 
   const confirmAddAdmin = async () => {
@@ -1261,6 +1268,10 @@ function UserManagement() {
             </div>
             <h3 style={styles.addAdminTitle}>ADD NEW ADMIN ACCOUNT</h3>
             
+            <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+              <input type="text" name="fakeusernameremembered" style={{display: 'none'}} />
+              <input type="password" name="fakepasswordremembered" style={{display: 'none'}} />
+            
             {addAdminError && (
               <div style={styles.addAdminErrorMessage}>
                 {addAdminError}
@@ -1270,24 +1281,34 @@ function UserManagement() {
             <div style={styles.formGroup}>
               <label style={styles.addAdminLabel}>Name:</label>
               <input
+                key={`admin-name-${showAddAdminModal ? 'open' : 'closed'}`}
                 type="text"
                 value={adminName}
                 onChange={(e) => setAdminName(e.target.value)}
                 style={styles.addAdminInput}
                 placeholder="Enter admin name"
                 disabled={addAdminLoading}
+                autoComplete="off"
+                autoFill="off"
+                data-lpignore="true"
+                data-form-type="other"
               />
             </div>
             
             <div style={styles.formGroup}>
               <label style={styles.addAdminLabel}>Email:</label>
               <input
+                key={`admin-email-${showAddAdminModal ? 'open' : 'closed'}`}
                 type="email"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
                 style={styles.addAdminInput}
                 placeholder="Enter admin email"
                 disabled={addAdminLoading}
+                autoComplete="new-email"
+                autoFill="off"
+                data-lpignore="true"
+                data-form-type="other"
               />
             </div>
             
@@ -1295,12 +1316,17 @@ function UserManagement() {
               <label style={styles.addAdminLabel}>Password:</label>
               <div style={styles.passwordContainer}>
                 <input
+                  key={`admin-password-${showAddAdminModal ? 'open' : 'closed'}`}
                   type={showPassword ? "text" : "password"}
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
                   style={styles.addAdminPasswordInput}
                   placeholder="Enter admin password"
                   disabled={addAdminLoading}
+                  autoComplete="new-password"
+                  autoFill="off"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
                 <button
                   type="button"
@@ -1327,6 +1353,8 @@ function UserManagement() {
             <p style={styles.addAdminNote}>
               *Must contain Uppercase, Lowercase, At least 8 digit number
             </p>
+            
+            </form>
             
             <div style={styles.addAdminConfirmation}>
               <p style={styles.confirmationText}>

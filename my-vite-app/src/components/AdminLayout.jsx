@@ -40,6 +40,36 @@ const modalAnimations = `
     }
   }
 
+  @keyframes logoutButtonPopup {
+    0% {
+      opacity: 0;
+      transform: scale(0.3) translateX(20px) translateY(-10px);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.15) translateX(-5px) translateY(2px);
+    }
+    80% {
+      opacity: 0.95;
+      transform: scale(0.95) translateX(2px) translateY(-1px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateX(0px) translateY(0px);
+    }
+  }
+
+  @keyframes logoutButtonHover {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    100% {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+  }
+
   @keyframes iconBounce {
     0% {
       opacity: 0;
@@ -65,6 +95,18 @@ const modalAnimations = `
     }
     100% { 
       transform: rotate(360deg); 
+    }
+  }
+
+  @keyframes modalButtonPulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1);
     }
   }
 `;
@@ -148,6 +190,7 @@ function AdminLayout({ children, title }) {
   const headerStyle = {
     width: '100%',
     height: '80px',
+    fontWeight: '700',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -163,7 +206,14 @@ function AdminLayout({ children, title }) {
   const leftHeaderStyle = { display: 'flex', alignItems: 'center', gap: '20px' };
   const logoStyle = { height: '60px', cursor: 'pointer' };
   const greetings = { fontSize: '20px', margin: 0 };
-  const profileBtnStyle = { height: '40px', width: '40px', cursor: 'pointer' };
+  const profileBtnStyle = { 
+    height: '40px', 
+    width: '40px', 
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    borderRadius: '50%',
+    padding: '2px'
+  };
   const contentStyle = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '40px' };
 
   const popupNotifStyle = {
@@ -205,7 +255,10 @@ function AdminLayout({ children, title }) {
     top: '18px', 
     right: -12,
     zIndex: 1000,
-    borderRadius: '8px'
+    borderRadius: '8px',
+    animation: 'logoutButtonPopup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transition: 'all 0.3s ease',
+    transform: 'scale(1)'
   };
 
   const confirmLogoutBtnStyle = {
@@ -355,9 +408,37 @@ function AdminLayout({ children, title }) {
         </p>
 
         <div ref={dropdownRef} style={{ position: 'relative' }}>
-          <img src={profileBtn} alt="Profile Icon" style={profileBtnStyle} onClick={() => setIsOpen(!isOpen)} />
+          <img 
+            src={profileBtn} 
+            alt="Profile Icon" 
+            style={profileBtnStyle} 
+            onClick={() => setIsOpen(!isOpen)}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.1) rotate(5deg)';
+              e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+              e.target.style.filter = 'brightness(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1) rotate(0deg)';
+              e.target.style.boxShadow = 'none';
+              e.target.style.filter = 'brightness(1)';
+            }}
+          />
           {isOpen && (
-            <img src={logoutBtn} alt="Logout" style={logoutBtnStyle} onClick={handleLogout} />
+            <img 
+              src={logoutBtn} 
+              alt="Logout" 
+              style={logoutBtnStyle} 
+              onClick={handleLogout}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'scale(1.05)';
+                e.target.style.filter = 'brightness(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'scale(1)';
+                e.target.style.filter = 'brightness(1)';
+              }}
+            />
           )}
         </div>
       </header>
@@ -416,6 +497,12 @@ function AdminLayout({ children, title }) {
                     e.target.style.transform = 'translateY(0px)';
                     e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
                   }}
+                  onMouseDown={(e) => {
+                    e.target.style.animation = 'modalButtonPulse 0.2s ease';
+                  }}
+                  onAnimationEnd={(e) => {
+                    e.target.style.animation = '';
+                  }}
                 >
                   Cancel
                 </button>
@@ -432,6 +519,12 @@ function AdminLayout({ children, title }) {
                     e.target.style.backgroundColor = '#38B000';
                     e.target.style.transform = 'translateY(0px)';
                     e.target.style.boxShadow = '0 2px 8px rgba(56, 176, 0, 0.3)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.target.style.animation = 'modalButtonPulse 0.2s ease';
+                  }}
+                  onAnimationEnd={(e) => {
+                    e.target.style.animation = '';
                   }}
                 >
                   Confirm

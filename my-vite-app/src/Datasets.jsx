@@ -365,7 +365,7 @@ function Datasets() {
   };
 
   return (
-    <AdminLayout title="DATASET">
+    <AdminLayout title="DATASETS">
       {/* Upload Section */}
       <div style={styles.uploadBox}>
         <label htmlFor="file-upload" style={styles.uploadContent}>

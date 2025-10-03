@@ -342,8 +342,8 @@ function Feedback() {
           {/* Header */}
           <div style={styles.headerTitle}>
             <span style={styles.colHeader}></span>
-            <span style={styles.colHeader}>DATE / TIME</span>
-            <span style={{ ...styles.colHeader, marginLeft: '170px' }}>USER ID</span>
+            <span style={{ ...styles.colHeader, marginLeft: '100px' }}>DATE/TIME</span>
+            <span style={{ ...styles.colHeader, marginLeft: '150px' }}>USER ID</span>
             <span style={{ ...styles.colHeader, marginLeft: '360px' }}>FEEDBACK</span>
             <div style={styles.iconGroup}>
               <div style={{ position: 'relative' }}>
@@ -445,6 +445,8 @@ const styles = {
     padding: '0 10px',
     height: '50px',
     gap: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.7px',
     position: 'relative',
   },
   colHeader: {},

@@ -398,7 +398,7 @@ function DashboardPage() {
 
   // --- styles ---
 
-  const headerStyle = { fontSize: '32px', margin: 0 };
+  const headerStyle = { fontSize: '32px', margin: 0 , fontWeight: 700};
   const statsContainerStyle = {
     width: '1800px',
     height: '170px',
@@ -452,7 +452,9 @@ function DashboardPage() {
     gap: '40px',
     border: '1px solid white',
     width: '100%',      
-    height: '180px'   
+    height: '180px',
+    transition: 'all 0.3s ease',
+    transform: 'translateY(0px) scale(1)'
   };
 
   const systemStatBgStyle = {
@@ -473,7 +475,7 @@ function DashboardPage() {
   };
 
   const btnIconStyle = { width: '110px', height: '120px', margin: '0' };
-  const btnTextStyle = { fontSize: '34px', margin: 0 };
+  const btnTextStyle = { fontSize: '34px', margin: 0 , fontWeight: 700};
 
 
   const activeBtnStyle = isActive
@@ -493,6 +495,8 @@ function DashboardPage() {
         border: 'none',
         lineHeight: ' 86px',
         letterSpacing: '2px',
+        transition: 'all 0.3s ease',
+        transform: 'translateY(0px) scale(1)'
       }
     : {
         background: `url(${inactiveBtn})`,
@@ -509,7 +513,9 @@ function DashboardPage() {
         fontSize: '32px',
         border: 'none',
         lineHeight: '86px',
-        letterSpacing: '2px'
+        letterSpacing: '2px',
+        transition: 'all 0.3s ease',
+        transform: 'translateY(0px) scale(1)'
       };
 
 
@@ -683,30 +689,81 @@ function DashboardPage() {
       <div style={lowerSectionStyle}>
         {/* 2x2 grid for dashboard buttons */}
         <div style={dashboardGridStyle}>
-          <div style={dashboardBtnStyle} onClick={() => navigate('/generatereport')}>
+          <div 
+            style={dashboardBtnStyle} 
+            onClick={() => navigate('/generatereport')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+          >
             <img src={reportIcon} alt="Reports" style={btnIconStyle} />
             <p style={btnTextStyle}>REPORTS</p>
           </div>
-          <div style={dashboardBtnStyle} onClick={() => navigate('/userManagement')}>
+          <div 
+            style={dashboardBtnStyle} 
+            onClick={() => navigate('/userManagement')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+          >
             <img src={usersIcon} alt="Users" style={btnIconStyle} />
             <p style={btnTextStyle}>USERS</p>
           </div>
-          <div style={dashboardBtnStyle} onClick={() => navigate('/datasets')}>
+          <div 
+            style={dashboardBtnStyle} 
+            onClick={() => navigate('/datasets')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+          >
             <img src={datasetIcon} alt="Data Sets" style={btnIconStyle} />
             <p style={btnTextStyle}>DATASETS</p>
           </div>
-          <div style={dashboardBtnStyle} onClick={() => navigate('/feedback')}>
+          <div 
+            style={dashboardBtnStyle} 
+            onClick={() => navigate('/feedback')}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.transition = 'all 0.3s ease';
+            }}
+          >
             <img src={feedbackIcon} alt="Feedback" style={btnIconStyle} />
             <p style={btnTextStyle}>FEEDBACK</p>
           </div>
         </div>
         {/* System Status */}
         <div style={systemStatBgStyle}>
-          <p style={{ fontSize: '60px', textAlign: 'center'}}>System Status</p>
+          <p style={{ fontSize: '60px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' }}>SYSTEM STATUS</p>
           {isActive ? (
-            <p style={{ fontSize: '18px', textAlign: 'center', marginTop: '30px' }}>
-              Warning:<br />
-              Activating maintenance mode will make the system <br />
+            <p style={{ fontSize: '20px', textAlign: 'center', marginTop: '20px' }}>
+              Activating maintenance mode will <br /> make the system
               unavailable to all users.
             </p>
           ) : (
@@ -716,7 +773,21 @@ function DashboardPage() {
             </p>
           )}
           <div style={{ textAlign: 'center' }}>
-            <div style={activeBtnStyle} onClick={handleActiveClick}>
+            <div 
+              style={activeBtnStyle} 
+              onClick={handleActiveClick}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)';
+                e.currentTarget.style.transition = 'all 0.3s ease';
+                e.currentTarget.style.filter = 'brightness(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.transition = 'all 0.3s ease';
+                e.currentTarget.style.filter = 'brightness(1)';
+              }}
+            >
             
             </div>
           </div>
