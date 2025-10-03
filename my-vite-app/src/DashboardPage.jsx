@@ -246,6 +246,7 @@ function DashboardPage() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isActive, setIsActive] = useState(true); 
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -820,26 +821,96 @@ function DashboardPage() {
                 handleConfirm();
               }}
             >
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                style={{
-                  display: 'block',
-                  margin: '0 auto 10px auto',
-                  padding: '8px',
-                  width: '80%',
-                  height: '40px',
-                  color: '#481872',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  border: '1px solid #ccc',
-                  backgroundColor: '#e9e7e7ff'
-                }}
-              />
+              <div style={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '80%',
+                margin: '0 auto 10px auto'
+              }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Enter your admin password"
+                  style={{
+                    width: '100%',
+                    padding: '12px 45px 12px 12px',
+                    height: '44px',
+                    color: '#481872',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    border: '2px solid #ddd',
+                    backgroundColor: '#f8f9fa',
+                    transition: 'all 0.3s ease',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#6f22a3';
+                    e.target.style.boxShadow = '0 0 0 3px rgba(111, 34, 163, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#ddd';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '24px',
+                    height: '24px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'rgba(111, 34, 163, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                  }}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#6f22a3"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {showPassword ? (
+                      // Eye off icon
+                      <>
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </>
+                    ) : (
+                      // Eye on icon
+                      <>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </>
+                    )}
+                  </svg>
+                </button>
+              </div>
 
               {/* Error Message */}
               {error && (

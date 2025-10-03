@@ -5,6 +5,58 @@ import generateReport from "./assets/generate_icon.png";
 import { firestore } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
 
+// Add CSS animations for dropdown effects
+const dropdownAnimations = `
+  @keyframes dropdownSlideDown {
+    0% {
+      opacity: 0;
+      transform: translateY(-10px) scaleY(0.8);
+      transform-origin: top;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scaleY(1);
+      transform-origin: top;
+    }
+  }
+
+  @keyframes dropdownSlideUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scaleY(1);
+      transform-origin: top;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-10px) scaleY(0.8);
+      transform-origin: top;
+    }
+  }
+
+  .dropdown-menu {
+    animation: dropdownSlideDown 0.2s ease-out forwards;
+  }
+
+  .dropdown-item {
+    transition: all 0.15s ease;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f8f9fa !important;
+    box-shadow: inset 2px 0 0 #6f22a3;
+  }
+`;
+
+// Inject animations into document
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = dropdownAnimations;
+  if (!document.head.querySelector('style[data-dropdown-animations]')) {
+    styleElement.setAttribute('data-dropdown-animations', 'true');
+    document.head.appendChild(styleElement);
+  }
+}
+
 const allColumns = [
   { key: "AllUsers", label: "ALL USERS" },
   { key: "Hearing", label: "HEARING USERS" },
@@ -481,27 +533,31 @@ function GenerateReports() {
           </div>
           {selectedCols.length === 0 && openDropdown === "users" && (
             <div
+              className="dropdown-menu"
               style={{
                 position: "absolute",
                 top: "48px",
                 right: "0px",
                 background: "white",
-                border: "1px solid gray",
-                borderRadius: "4px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
                 zIndex: 10,
-                minWidth: "140px"
+                minWidth: "200px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
               }}
             >
               {allColumns.map((col) => (
                 <div
                   key={col.key}
+                  className="dropdown-item"
                   onClick={() => toggleColumn(col.key)}
                   style={{
-                    padding: "10px 16px",
+                    padding: "12px 16px",
                     cursor: "pointer",
                     background: selectedCols.includes(col.key) ? "#b77df1ff" : "white",
                     fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
-                    color: "#000"
+                    color: "#000",
+                    borderRadius: selectedCols.includes(col.key) ? "4px" : "0"
                   }}
                 >
                   {col.label}
@@ -575,27 +631,35 @@ function GenerateReports() {
             {/* Only the dropdown menu is conditional */}
             {isLast && openDropdown === col && (
               <div
+                className="dropdown-menu"
                 style={{
                   position: "absolute",
                   top: "48px",
                   right: "0px",
                   background: "white",
-                  border: "1px solid gray",
-                  borderRadius: "4px",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
                   zIndex: 10,
-                  minWidth: "140px"
+                  minWidth: "200px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
                 }}
               >
-                {allColumns.map((dropdownCol) => (
+                {allColumns.map((dropdownCol, index) => (
                   <div
                     key={dropdownCol.key}
+                    className="dropdown-item"
                     onClick={() => toggleColumn(dropdownCol.key)}
                     style={{
-                      padding: "10px 16px",
+                      padding: "12px 16px",
                       cursor: "pointer",
                       background: selectedCols.includes(dropdownCol.key) ? "#b77df1ff" : "white",
                       fontWeight: selectedCols.includes(dropdownCol.key) ? "bold" : "normal",
-                      color: "#000"
+                      color: "#000",
+                      borderBottom: index === allColumns.length - 1 ? "none" : "1px solid #eee",
+                      borderRadius: 
+                        index === 0 && index === allColumns.length - 1 ? "8px" :
+                        index === 0 ? "8px 8px 0 0" :
+                        index === allColumns.length - 1 ? "0 0 8px 8px" : "0"
                     }}
                   >
                     {dropdownCol.label}
@@ -626,7 +690,7 @@ function GenerateReports() {
 
     // Find the max number of rows needed - only consider selected columns
     const maxRows = selectedCols.length > 0 
-      ? Math.max(...filteredUsersPerCol.map(arr => arr.length), 0)
+      ? Math.max(...filteredUsersPerCol.map(arr => arr.length), 8) // Ensure at least 8 rows to accommodate dropdown
       : userData.length; // Only use userData.length when no columns are selected
 
     // Render rows per user index in each column
@@ -638,11 +702,14 @@ function GenerateReports() {
             style={{
               background: "#fff",
               color: "#481872",
-              width: "320px",
-              minWidth: "320px",
-              maxWidth: "320px",
+              width: "380px",
+              minWidth: "380px",
+              maxWidth: "380px",
               textAlign: "left",
-              padding: "12px 18px" // Added padding
+              padding: "12px 18px",
+              verticalAlign: "top",
+              height: "72px",
+              borderRight: "1px solid #eee"
             }}
           >
             {userData[rowIdx] ? (
@@ -662,19 +729,52 @@ function GenerateReports() {
               style={{
                 background: "#fff",
                 color: "#481872",
-                width: "320px",
-                minWidth: "320px",
-                maxWidth: "320px",
+                width: "380px",
+                minWidth: "380px",
+                maxWidth: "380px",
                 textAlign: "left",
-                padding: "12px 18px" // Added padding
+                padding: "12px 18px",
+                verticalAlign: "top",
+                height: "72px",
+                borderRight: "1px solid #eee"
               }}
             >
               {users[rowIdx] ? (
-                <div>
-                  <div className="print-user-name"><b>{rowIdx + 1}.</b> {users[rowIdx].name}</div>
-                  <div style={{ fontSize: "13px" }}>{users[rowIdx].email}</div>
+                <div style={{ 
+                  height: "48px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start"
+                }}>
+                  <div className="print-user-name" style={{ lineHeight: "20px", marginBottom: "2px" }}>
+                    <b>{rowIdx + 1}.</b> {users[rowIdx].name}
+                  </div>
+                  <div style={{ fontSize: "13px", lineHeight: "16px", color: "#666" }}>
+                    {users[rowIdx].email}
+                  </div>
                 </div>
-              ) : null}
+              ) : rowIdx === 0 && users.length === 0 ? (
+                <div style={{ 
+                  height: "48px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#999", 
+                  fontStyle: "italic", 
+                  textAlign: "center",
+                  fontSize: "14px"
+                }}>
+                  No users found in this category
+                </div>
+              ) : (
+                <div style={{ 
+                  height: "48px",
+                  lineHeight: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start"
+                }}>&nbsp;</div>
+              )}
             </td>
           );
         })}
@@ -683,7 +783,7 @@ function GenerateReports() {
   };
 
   return (
-    <AdminLayout title="Generate Report">
+    <AdminLayout title="GENERATE REPORT">
       <div style={{ padding: "16px", height: "80vh" }}>
         {selectedCols.length === 0 ? (
           // Show message when no columns are selected
@@ -702,7 +802,12 @@ function GenerateReports() {
             </div>
             
             {/* Show the dropdown button for easy access */}
-            <div style={{ marginTop: "30px", position: "relative" }}>
+            <div style={{ 
+              marginTop: "30px", 
+              position: "relative", 
+              display: "flex", 
+              justifyContent: "center" 
+            }}>
               <button
                 onClick={() => setOpenDropdown(openDropdown === "users" ? null : "users")}
                 style={{
@@ -732,22 +837,27 @@ function GenerateReports() {
               {/* Dropdown menu */}
               {openDropdown === "users" && (
                 <div
+                  className="dropdown-menu"
                   style={{
                     position: "absolute",
-                    top: "60px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: "white",
-                    border: "1px solid gray",
-                    borderRadius: "4px",
-                    zIndex: 10,
+                    top: "100%",
+                    left: "0",
+                    right: "0",
+                    marginLeft: "auto",
+                    marginRight: "auto",
                     minWidth: "200px",
-                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+                    width: "auto",
+                    background: "white",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    zIndex: 10,
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
                   }}
                 >
-                  {allColumns.map((col) => (
+                  {allColumns.map((col, index) => (
                     <div
                       key={col.key}
+                      className="dropdown-item"
                       onClick={() => toggleColumn(col.key)}
                       style={{
                         padding: "12px 16px",
@@ -755,7 +865,11 @@ function GenerateReports() {
                         background: selectedCols.includes(col.key) ? "#b77df1ff" : "white",
                         fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
                         color: "#000",
-                        borderBottom: "1px solid #eee"
+                        borderBottom: index === allColumns.length - 1 ? "none" : "1px solid #eee",
+                        borderRadius: 
+                          index === 0 && index === allColumns.length - 1 ? "8px" :
+                          index === 0 ? "8px 8px 0 0" :
+                          index === allColumns.length - 1 ? "0 0 8px 8px" : "0"
                       }}
                     >
                       {col.label}
@@ -789,7 +903,8 @@ function GenerateReports() {
                 minWidth: "100px",
                 width: "100%",
                 maxWidth: "1600px",
-                borderCollapse: "collapse",
+                borderCollapse: "separate",
+                borderSpacing: "0",
                 tableLayout: "fixed",
                 marginLeft: 0
               }}
