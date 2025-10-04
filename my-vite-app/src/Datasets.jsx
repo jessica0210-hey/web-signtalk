@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminLayout from './components/AdminLayout';
 import uploadBg from './assets/uploadBg.png';  
 import uploadIcon from './assets/uploadIcon.png'; 
@@ -32,6 +32,9 @@ function Datasets() {
   
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // File input ref for resetting
+  const fileInputRef = useRef(null);
 
   // Focus management for delete modal keyboard support
   useEffect(() => {
@@ -378,14 +381,23 @@ function Datasets() {
     // Add new item to UI state
     setGif((prev) => [...prev, { id: keywordId, keyword: keywordId, gifUrl: downloadURL }]);
 
+      // Reset form and file input
       setSelectedFile(null);
       setKeyword("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       setIsUploading(false);
 
       showNotification('success', `"${keywordId}" uploaded successfully!`);
     } catch (error) {
       console.error("Upload failed:", error);
       setIsUploading(false);
+      // Reset file input on error too
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setSelectedFile(null);
       showNotification('error', 'Upload failed. Please try again.');
     }
   };
@@ -409,6 +421,7 @@ function Datasets() {
         <div style={styles.inputRow}>
         {/*File input*/}
         <input
+          ref={fileInputRef}
           id="file-upload"
           type="file"
           accept="image/gif"
