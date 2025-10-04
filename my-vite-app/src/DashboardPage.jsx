@@ -306,7 +306,7 @@ function DashboardPage() {
           if (data.isOnline === true) active++;
         });
 
-        const total = regularUsers + admins; // Total includes both regular users and admins
+        const total = regularUsers; // Total only includes regular users (excludes admins)
         
         setTotalUsers(total);
         setHearingUsers(hearing);

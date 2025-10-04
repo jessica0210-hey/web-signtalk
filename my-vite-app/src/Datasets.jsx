@@ -180,6 +180,13 @@ function Datasets() {
       return;
     }
     
+    // Check if new keyword already exists in current data
+    const existingItem = gif.find(item => item.keyword === newKeywordValue);
+    if (existingItem) {
+      showNotification('error', `A dataset with the name "${newKeywordValue}" already exists. Please choose a different name.`);
+      return;
+    }
+    
     setIsRenaming(true);
     
     try {

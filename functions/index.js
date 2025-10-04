@@ -215,7 +215,6 @@ exports.createAdminAccount = onCall({
       email: email,
       password: hashedPassword,
       userType: "admin",
-      isOnline: false,
       uid: userRecord.uid,
       formatted_uid: nextFormattedUID,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
