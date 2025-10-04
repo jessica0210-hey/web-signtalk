@@ -424,7 +424,7 @@ function GenerateReports() {
             userType: data.userType,      // <-- add this
     isOnline: data.isOnline,
           };
-        });
+        }).filter(user => user.userType !== 'admin'); // Filter out admin users
         setUserData(usersArr);
       } catch {
         setUserData([]);
@@ -446,17 +446,20 @@ function GenerateReports() {
 
   // --- Filtering logic for each column ---
   const getFilteredUsers = (colKey) => {
+    // Filter out admin users from all categories
+    const nonAdminUsers = userData.filter((u) => u.userType !== "admin");
+    
     switch (colKey) {
       case "AllUsers":
-        return userData;
+        return nonAdminUsers;
       case "Hearing":
-        return userData.filter((u) => u.userType === "Hearing");
+        return nonAdminUsers.filter((u) => u.userType === "Hearing");
       case "Non-Hearing":
-        return userData.filter((u) => u.userType === "Non-Hearing");
+        return nonAdminUsers.filter((u) => u.userType === "Non-Hearing");
       case "active":
-        return userData.filter((u) => u.isOnline === true);
+        return nonAdminUsers.filter((u) => u.isOnline === true);
       case "inactive":
-        return userData.filter((u) => u.isOnline === false);
+        return nonAdminUsers.filter((u) => u.isOnline === false);
       default:
         return [];
     }

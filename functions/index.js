@@ -2,9 +2,98 @@ const {onRequest, onCall} = require("firebase-functions/v2/https");
 const {logger} = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require("cors")({origin: true});
+const nodemailer = require("nodemailer");
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+
+// Email configuration using environment variables for Firebase Functions v2
+const createTransporter = () => {
+  // Try multiple configurations for better compatibility
+  const configs = [
+    // Primary Gmail SMTP configuration
+    {
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER || "signtalk625@gmail.com",
+        pass: process.env.EMAIL_PASS || "SignTalk@2025",
+      },
+    },
+    // Alternative Gmail SMTP configuration
+    {
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER || "signtalk625@gmail.com",
+        pass: process.env.EMAIL_PASS || "SignTalk@2025",
+      },
+    },
+  ];
+  
+  // Return the primary configuration
+  return nodemailer.createTransport(configs[0]);
+};
+
+// Send verification email
+const sendVerificationEmail = async (email, verificationLink, adminName) => {
+  try {
+    const transporter = createTransporter();
+    
+    const mailOptions = {
+      from: `SignTalk Admin <${process.env.EMAIL_USER || "signtalk625@gmail.com"}>`,
+      to: email,
+      subject: "Verify your SignTalk Admin Account",
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+          <div style="background: linear-gradient(135deg, #6D2593, #8A4FB8); color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0;">SignTalk Admin</h1>
+            <p style="margin: 5px 0 0 0;">Account Verification Required</p>
+          </div>
+          
+          <div style="padding: 30px; background-color: #f9f9f9;">
+            <h2 style="color: #6D2593; margin-top: 0;">Welcome ${adminName || 'Admin'}!</h2>
+            
+            <p>Your SignTalk admin account has been created successfully. To complete the setup and gain access to the admin dashboard, please verify your email address.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationLink}" 
+                 style="background: linear-gradient(135deg, #6D2593, #8A4FB8); 
+                        color: white; 
+                        padding: 15px 30px; 
+                        text-decoration: none; 
+                        border-radius: 25px; 
+                        font-weight: bold;
+                        display: inline-block;
+                        box-shadow: 0 4px 15px rgba(109, 37, 147, 0.3);">
+                Verify Email Address
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${verificationLink}" style="color: #6D2593; word-break: break-all;">${verificationLink}</a>
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+            
+            <p style="color: #666; font-size: 12px; text-align: center;">
+              This is an automated message. Please do not reply to this email.<br>
+              If you didn't request this account, please ignore this email.
+            </p>
+          </div>
+        </div>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    logger.info(`Verification email sent successfully to ${email}:`, result.messageId);
+    return result;
+  } catch (error) {
+    logger.error(`Failed to send verification email to ${email}:`, error);
+    throw error;
+  }
+};
 
 /**
  * Cloud Function to reset user password with Admin SDK
@@ -163,6 +252,7 @@ exports.deleteUserAccount = onCall({
  */
 exports.createAdminAccount = onCall({
   cors: true,
+  secrets: ["EMAIL_USER", "EMAIL_PASS"],
 }, async (request) => {
   try {
     const {name, email, password, adminUid} = request.data;
@@ -180,14 +270,32 @@ exports.createAdminAccount = onCall({
 
     logger.info(`Admin ${adminUid} creating new admin account for ${email}`);
 
-    // Create Firebase Auth account
+    // Create Firebase Auth account with email verification disabled initially
     const userRecord = await admin.auth().createUser({
       email: email,
       password: password,
       displayName: name,
+      emailVerified: false, // Require email verification
     });
 
     logger.info(`Created Firebase Auth account: ${userRecord.uid}`);
+    
+    // Generate email verification link
+    const verificationLink = await admin.auth().generateEmailVerificationLink(email);
+    logger.info(`Generated email verification link for ${email}`);
+
+    // Try to send verification email, but don't fail if it doesn't work
+    let emailSent = false;
+    try {
+      await sendVerificationEmail(email, verificationLink, name);
+      logger.info(`Verification email sent successfully to ${email}`);
+      emailSent = true;
+    } catch (emailError) {
+      logger.error(`Failed to send verification email to ${email}:`, emailError);
+      logger.info(`Email sending failed, but account created. Verification link available for manual sharing: ${verificationLink}`);
+      // Continue with account creation even if email fails
+      // The verification link will be provided in the response for manual sharing
+    }
 
     // Generate formatted UID (you may need to adapt this logic)
     const usersRef = admin.firestore().collection("users");
@@ -209,7 +317,7 @@ exports.createAdminAccount = onCall({
         .update(password)
         .digest("hex");
 
-    // Create Firestore document
+    // Create Firestore document with pending status until email is verified
     const adminData = {
       name: name,
       email: email,
@@ -219,8 +327,10 @@ exports.createAdminAccount = onCall({
       formatted_uid: nextFormattedUID,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       createdBy: adminUid,
-      accountStatus: "active",
+      accountStatus: "pending", // Set to pending until email verification
       authCreated: true,
+      emailVerified: false,
+      verificationLink: verificationLink,
       passwordHashMethod: "sha256",
     };
 
@@ -233,9 +343,14 @@ exports.createAdminAccount = onCall({
 
     return {
       success: true,
-      message: `Admin account successfully created for ${email}`,
+      message: emailSent 
+        ? `Admin account successfully created for ${email}. A verification email has been sent.`
+        : `Admin account successfully created for ${email}. Email sending failed - please use the verification link provided.`,
       uid: userRecord.uid,
       formattedUid: nextFormattedUID,
+      verificationLink: verificationLink,
+      requiresEmailVerification: true,
+      emailSent: emailSent,
     };
   } catch (error) {
     logger.error("Error creating admin account:", error);
@@ -309,6 +424,86 @@ exports.getUserInfo = onCall({
     } else if (error.code === "auth/invalid-email") {
       errorMessage = "Invalid email address";
     } else if (error.message.includes("Unauthorized")) {
+      errorMessage = error.message;
+    }
+
+    throw new Error(errorMessage);
+  }
+});
+
+/**
+ * Cloud Function to verify admin email and activate account
+ * Callable from client-side when verification link is clicked
+ */
+exports.verifyAdminEmail = onCall({
+  cors: true,
+}, async (request) => {
+  try {
+    const {email} = request.data;
+
+    logger.info(`Email verification requested for ${email}`);
+
+    // Get user by email from Firebase Auth
+    const userRecord = await admin.auth().getUserByEmail(email);
+    
+    // Check if user exists in Firestore
+    const userDoc = await admin.firestore()
+        .collection("users")
+        .doc(userRecord.uid)
+        .get();
+
+    if (!userDoc.exists) {
+      throw new Error("User document not found");
+    }
+
+    const userData = userDoc.data();
+    
+    // Check if this is an admin account
+    if (userData.userType !== "admin") {
+      throw new Error("Only admin accounts require email verification");
+    }
+
+    // Check if already verified
+    if (userData.emailVerified === true && userData.accountStatus === "active") {
+      return {
+        success: true,
+        message: "Email already verified",
+        alreadyVerified: true,
+      };
+    }
+
+    // Update Firebase Auth email verification status (might already be done by the client)
+    // But let's make sure it's set to true
+    await admin.auth().updateUser(userRecord.uid, {
+      emailVerified: true,
+    });
+
+    // Update Firestore document to activate account
+    await admin.firestore()
+        .collection("users")
+        .doc(userRecord.uid)
+        .update({
+          emailVerified: true,
+          accountStatus: "active",
+          verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+    logger.info(`Email verified and account activated for ${email}`);
+
+    return {
+      success: true,
+      message: `Email verified successfully for ${email}. You can now log in.`,
+      activated: true,
+    };
+  } catch (error) {
+    logger.error("Error verifying email:", error);
+
+    let errorMessage = "Failed to verify email";
+    if (error.code === "auth/user-not-found") {
+      errorMessage = "User not found";
+    } else if (error.code === "auth/invalid-email") {
+      errorMessage = "Invalid email address";
+    } else if (error.message) {
       errorMessage = error.message;
     }
 

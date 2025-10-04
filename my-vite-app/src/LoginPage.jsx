@@ -9,6 +9,7 @@ import GenerateReport from './GenerateReport';
 import Datasets from './Datasets';
 import ForgotPass from './ForgotPass';
 import UserManagement from './UserManagement';
+import EmailVerification from './EmailVerification';
 import ProtectedRoute from './components/ProtectedRoute';
 import { auth, firestore } from './firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
@@ -67,6 +68,7 @@ if (typeof document !== 'undefined') {
 function LoginWrapper() {
   const navigate = useNavigate();
   const [showForgotPopup, setShowForgotPopup] = useState(false);
+  const [showUnverifiedPopup, setShowUnverifiedPopup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -238,6 +240,44 @@ function LoginWrapper() {
         }
         
         if (userDoc.exists() && userDoc.data().userType === 'admin') {
+          // Check if email is verified for admin accounts
+          const userData = userDoc.data();
+          console.log('Admin user data:', userData);
+          console.log('emailVerified:', userData.emailVerified);
+          console.log('accountStatus:', userData.accountStatus);
+          console.log('Firebase Auth emailVerified:', user.emailVerified);
+          
+          // If Firebase Auth says email is verified but our Firestore doesn't, update it
+          if (user.emailVerified && (userData.emailVerified === false || userData.accountStatus === 'pending')) {
+            console.log('Firebase Auth email verified but Firestore not updated. Updating now...');
+            try {
+              // Call our Cloud Function to update the Firestore document
+              const { httpsCallable } = await import('firebase/functions');
+              const { functions } = await import('./firebase');
+              const verifyAdminEmail = httpsCallable(functions, 'verifyAdminEmail');
+              const result = await verifyAdminEmail({ email: user.email });
+              console.log('Auto-verification result:', result.data);
+              
+              if (result.data.success) {
+                // Continue with login since verification was successful
+                console.log('Auto-verification successful, continuing with login');
+              } else {
+                console.log('Auto-verification failed, but Firebase Auth is verified, so allowing login');
+              }
+            } catch (error) {
+              console.error('Auto-verification error:', error);
+              // Continue anyway since Firebase Auth is verified
+            }
+          } else if (userData.emailVerified === false || userData.accountStatus === 'pending') {
+            // Admin account exists but email not verified
+            console.log('Blocking login - email not verified or account pending');
+            await auth.signOut();
+            setShowUnverifiedPopup(true);
+            setPassword('');
+            setLoading(false);
+            return;
+          }
+          
           // Clear browser history and navigate to dashboard
           window.history.replaceState(null, '', '/dashboardPage');
           navigate('/dashboardPage', { replace: true });
@@ -541,6 +581,12 @@ function LoginWrapper() {
   };
 
   const handleForgotClick = () => setShowForgotPopup(true);
+
+  // Unverified account popup handlers
+  const closeUnverifiedPopup = () => {
+    setShowUnverifiedPopup(false);
+    setErrorMsg(''); // Clear any error messages
+  };
 
   const bgStyle = {
     backgroundImage: `url(${bgImage})`,
@@ -918,6 +964,61 @@ function LoginWrapper() {
           </div>
         </div>
       )}
+      
+      {showUnverifiedPopup && (
+        <div style={popupNotifStyle}>
+          <div style={popupStyle}>
+            <div style={popupHeaderStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '20px' }}>⚠️</span>
+                Account Not Verified
+              </div>
+            </div>
+            <div style={popupBodyStyle}>
+              <div style={{ marginBottom: '24px' }}>
+                <p style={{ 
+                  fontSize: '16px', 
+                  padding: '0', 
+                  margin: '0 0 8px 0',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Your account is not verified yet.
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  margin: '0',
+                  lineHeight: '1.4'
+                }}>
+                  Please check your email for the verification link and click on it to activate your account before logging in.
+                </p>
+              </div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                gap: '16px',
+                marginTop: '20px'
+              }}>
+                <button 
+                  onClick={closeUnverifiedPopup} 
+                  style={confirmBtnStyle}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 6px 20px rgba(109, 37, 147, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0px)';
+                    e.target.style.boxShadow = '0 4px 12px rgba(109, 37, 147, 0.3)';
+                  }}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {loading && (
         <div style={spinnerOverlayStyle}>
           <div style={spinnerStyle}></div>
@@ -934,6 +1035,7 @@ function App() {
         <Route path="/" element={<LoginWrapper />} />
         <Route path="/login" element={<LoginWrapper />} />
         <Route path="/forgotpass" element={<ForgotPass />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
         <Route 
           path="/dashboardPage" 
           element={
