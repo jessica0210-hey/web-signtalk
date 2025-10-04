@@ -325,22 +325,16 @@ function GenerateReports() {
               margin: 1px 0;
             }
             
-            /* Page setup with better margins */
+            /* Page setup with better margins and page numbering */
             @page {
-              margin: 0.5in;
+              margin: 0.5in 0.5in 1in 0.5in;
               size: landscape;
-            }
-            
-            /* Footer for page numbers */
-            .print-footer {
-              position: fixed;
-              bottom: 20px;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 12px;
-              color: #481872;
-              font-family: Arial, sans-serif;
+              @bottom-center {
+                content: "Page " counter(page);
+                font-size: 12px;
+                color: #481872;
+                font-family: Arial, sans-serif;
+              }
             }
             
             /* Hide any remaining UI elements */
@@ -377,10 +371,6 @@ function GenerateReports() {
           <div class="print-table-wrapper">
             ${tableHTML}
           </div>
-        </div>
-        
-        <div class="print-footer">
-          Page <span id="pageNum">1</span>
         </div>
         
         <script>

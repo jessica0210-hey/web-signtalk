@@ -968,6 +968,15 @@ function UserManagement() {
                         <td style={{ ...styles.td, width: '35%' }}>{item.email || 'N/A'}</td>
                         <td style={{ ...styles.td, width: '25%' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {activeTab === "users" && (
+                              <div 
+                                style={{
+                                  ...styles.onlineIndicator,
+                                  ...(item.isOnline ? styles.onlineStatus : styles.offlineStatus)
+                                }}
+                                title={item.isOnline ? 'Online' : 'Offline'}
+                              />
+                            )}
                             {item.name || 'N/A'}
                             {item.isCurrentUser && activeTab === "admins" && (
                               <span style={styles.currentUserBadge}>
@@ -980,6 +989,16 @@ function UserManagement() {
                           <button 
                             style={styles.resetBtn}
                             onClick={() => handleResetPassword(item)}
+                            onMouseEnter={(e) => {
+                              e.target.style.transform = 'translateY(-2px)';
+                              e.target.style.boxShadow = '0 4px 12px rgba(111, 34, 163, 0.4)';
+                              e.target.style.backgroundColor = '#5d1c87';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.transform = 'translateY(0px)';
+                              e.target.style.boxShadow = '0 2px 4px rgba(111, 34, 163, 0.3)';
+                              e.target.style.backgroundColor = '#6F22A3';
+                            }}
                           >
                             Reset Password
                           </button>
@@ -991,6 +1010,20 @@ function UserManagement() {
                             }}
                             onClick={() => handleDeleteAccount(item)}
                             disabled={item.isCurrentUser && activeTab === "admins"}
+                            onMouseEnter={(e) => {
+                              if (!(item.isCurrentUser && activeTab === "admins")) {
+                                e.target.style.transform = 'translateY(-2px)';
+                                e.target.style.boxShadow = '0 4px 12px rgba(230, 57, 70, 0.4)';
+                                e.target.style.backgroundColor = '#c82333';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!(item.isCurrentUser && activeTab === "admins")) {
+                                e.target.style.transform = 'translateY(0px)';
+                                e.target.style.boxShadow = '0 2px 4px rgba(230, 57, 70, 0.3)';
+                                e.target.style.backgroundColor = '#E63946';
+                              }
+                            }}
                           >
                             Delete Account
                           </button>
@@ -1004,7 +1037,24 @@ function UserManagement() {
           </div>
         </div>
 
-        {activeTab === "admins" && <button style={styles.addBtn} onClick={handleAddAdmin}>+ Add an account</button>}
+        {activeTab === "admins" && (
+        <button 
+          style={styles.addBtn} 
+          onClick={handleAddAdmin}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(56, 176, 0, 0.4)';
+            e.target.style.backgroundColor = '#2E8B00';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0px)';
+            e.target.style.boxShadow = '0 2px 4px rgba(56, 176, 0, 0.3)';
+            e.target.style.backgroundColor = '#38B000';
+          }}
+        >
+          + Add an account
+        </button>
+      )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -1660,9 +1710,9 @@ const styles = {
   th: { padding: '12px', color: '#fff', textAlign: 'center', backgroundColor: '#3C0B68', display: 'table-cell', verticalAlign: 'middle' },
   td: { padding: '20px', backgroundColor: '#fdfdfd', textAlign: 'center', color: '#333' ,marginLeft: '20px', marginRight: '20px'},
   row: { backgroundColor: 'transparent'},
-  resetBtn: { backgroundColor: '#6F22A3', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', marginRight: '12px', cursor: 'pointer', fontSize: '14px' },
-  deleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontSize: '14px' },
-  addBtn: { marginTop: '15px', backgroundColor: '#38B000', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 20px', cursor: 'pointer', fontSize: '16px' },
+  resetBtn: { backgroundColor: '#6F22A3', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', marginRight: '12px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 4px rgba(111, 34, 163, 0.3)' },
+  deleteBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 4px rgba(230, 57, 70, 0.3)' },
+  addBtn: { marginTop: '15px', backgroundColor: '#38B000', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 20px', cursor: 'pointer', fontSize: '16px', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 4px rgba(56, 176, 0, 0.3)' },
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.3s ease-out' },
   modal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '400px', width: '90%', textAlign: 'center', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)' },
   modalIcon: { marginBottom: '20px' },
@@ -1722,6 +1772,23 @@ const styles = {
   errorBtn: { backgroundColor: '#E63946', color: '#fff', border: 'none', outline: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '16px', fontWeight: '600', transition: 'all 0.3s ease', transform: 'translateY(0px)', boxShadow: '0 2px 8px rgba(230, 57, 70, 0.3)', minWidth: '120px', fontFamily: 'inherit', textDecoration: 'none', appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none' },
   // Current User Badge Style
   currentUserBadge: { fontSize: '12px', color: '#28a745', fontWeight: '600', backgroundColor: '#d4edda', padding: '2px 8px', borderRadius: '12px', border: '1px solid #c3e6cb' },
+  // Online Status Indicator Styles
+  onlineIndicator: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    flexShrink: 0,
+    boxShadow: '0 0 4px rgba(0, 0, 0, 0.3)',
+    transition: 'all 0.3s ease'
+  },
+  onlineStatus: {
+    backgroundColor: '#38B000',
+    boxShadow: '0 0 6px rgba(56, 176, 0, 0.6)'
+  },
+  offlineStatus: {
+    backgroundColor: '#6c757d',
+    boxShadow: '0 0 4px rgba(108, 117, 125, 0.4)'
+  },
 };
 
 export default UserManagement;

@@ -298,11 +298,13 @@ function LoginWrapper() {
           } else {
             console.log('No pending admin found for existing Firebase Auth account');
             setErrorMsg('Access denied. Only admin users can log in.');
+            setPassword(''); // Clear password field when access is denied
             return;
           }
         } else {
           console.log('Access denied - user document exists but not admin');
           setErrorMsg('Access denied. Only admin users can log in.');
+          setPassword(''); // Clear password field when access is denied
           await auth.signOut();
           return;
         }
@@ -422,10 +424,12 @@ function LoginWrapper() {
         
         // If no pending admin found, show error
         setErrorMsg('Incorrect Username or Password. Please try again.');
+        setPassword(''); // Clear password field when credentials are incorrect
       }
     } catch (error) {
       console.error('Login error:', error);
       setErrorMsg('An error occurred during login. Please try again.');
+      setPassword(''); // Clear password field on error
       
       // If there was an error during Firebase Auth creation, sign out
       if (auth.currentUser) {

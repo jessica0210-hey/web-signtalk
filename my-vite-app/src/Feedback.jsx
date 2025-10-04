@@ -219,27 +219,21 @@ function Feedback() {
               page-break-inside: avoid;
             }
             
-            /* Page setup with better margins */
+            /* Page setup with better margins and page numbering */
             @page {
-              margin: 0.5in 0.75in 0.75in 0.75in;
+              margin: 0.5in 0.75in 1in 0.75in;
               size: letter;
+              @bottom-center {
+                content: "Page " counter(page);
+                font-size: 12px;
+                color: #481872;
+                font-family: Arial, sans-serif;
+              }
             }
             
             /* Page break styling */
             .page-break {
               page-break-before: always;
-            }
-            
-            /* Footer for page numbers */
-            .print-footer {
-              position: fixed;
-              bottom: 20px;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 12px;
-              color: #481872;
-              font-family: Arial, sans-serif;
             }
           }
         </style>
@@ -281,26 +275,8 @@ function Feedback() {
         ` : '<div class="print-no-data">No feedback records found</div>'}
         </div>
         
-        <div class="print-footer">
-          Page <span id="pageNum">1</span>
-        </div>
-        
         <script>
           window.onload = function() {
-            const footer = document.querySelector('.print-footer');
-            
-            // Hide footer initially
-            if (footer) footer.style.display = 'none';
-            
-            // Show footer only during print
-            window.addEventListener('beforeprint', function() {
-              if (footer) footer.style.display = 'block';
-            });
-            
-            window.addEventListener('afterprint', function() {
-              if (footer) footer.style.display = 'none';
-            });
-            
             setTimeout(function() {
               // Trigger print dialog
               window.print();

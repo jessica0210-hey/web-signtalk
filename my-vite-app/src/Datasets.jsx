@@ -33,6 +33,20 @@ function Datasets() {
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Focus management for delete modal keyboard support
+  useEffect(() => {
+    if (showDeleteModal) {
+      // Add a small delay to ensure the modal is rendered
+      const timer = setTimeout(() => {
+        const deleteModal = document.querySelector('[data-delete-modal]');
+        if (deleteModal) {
+          deleteModal.focus();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showDeleteModal]);
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -72,6 +86,18 @@ function Datasets() {
   // Context menu functions
   const handleContextMenu = (e, item) => {
     e.preventDefault();
+    setContextMenu({
+      show: true,
+      x: e.pageX,
+      y: e.pageY,
+      item: item
+    });
+  };
+
+  // Left click handler - same as context menu
+  const handleLeftClick = (e, item) => {
+    console.log('Left click detected on item:', item.keyword); // Debug log
+    e.stopPropagation(); // Stop event bubbling but don't prevent default
     setContextMenu({
       show: true,
       x: e.pageX,
@@ -397,6 +423,11 @@ function Datasets() {
           placeholder="Enter keyword (e.g. hello)"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && selectedFile && keyword) {
+              handleUpload();
+            }
+          }}
           style={styles.keywordInput}
         />
 
@@ -444,6 +475,19 @@ function Datasets() {
                   animationDelay: `${index * 0.1}s`
                 }}
                 onContextMenu={(e) => handleContextMenu(e, item)}
+                onClick={(e) => handleLeftClick(e, item)}
+                onMouseEnter={(e) => {
+                  const card = e.currentTarget;
+                  card.style.transform = 'scale(1.02)';
+                  card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                  card.style.backgroundColor = '#eaeaea';
+                }}
+                onMouseLeave={(e) => {
+                  const card = e.currentTarget;
+                  card.style.transform = 'scale(1)';
+                  card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                  card.style.backgroundColor = '#f5f5f5';
+                }}
               >
                 <img src={item.gifUrl} alt={item.keyword} style={styles.gif} />
                 <p style={styles.gifName}>{item.keyword}</p>
@@ -564,6 +608,16 @@ function Datasets() {
               type="text"
               value={newKeyword}
               onChange={(e) => setNewKeyword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newKeyword.trim() && !isRenaming) {
+                  confirmRename();
+                }
+                if (e.key === 'Escape') {
+                  setShowRenameModal(false);
+                  setNewKeyword('');
+                  setSelectedItem(null);
+                }
+              }}
               placeholder="Enter new keyword name..."
               style={{
                 width: '100%',
@@ -649,28 +703,46 @@ function Datasets() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1002
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-            minWidth: '400px',
-            maxWidth: '500px',
-            animation: 'scaleInModal 0.3s ease-out',
-            transform: 'scale(1)'
-          }}>
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1002
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !isDeleting) {
+              confirmDelete();
+            }
+            if (e.key === 'Escape') {
+              setShowDeleteModal(false);
+              setSelectedItem(null);
+            }
+          }}
+          tabIndex={0}
+          autoFocus
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '12px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+              minWidth: '400px',
+              maxWidth: '500px',
+              animation: 'scaleInModal 0.3s ease-out',
+              transform: 'scale(1)',
+              outline: 'none'
+            }}
+            data-delete-modal
+            tabIndex={-1}
+          >
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1152,7 +1224,9 @@ const styles = {
     transition: 'all 0.3s ease',
     transform: 'scale(1)',
     opacity: 1,
-    animation: 'fadeInUp 0.4s ease-out'
+    animation: 'fadeInUp 0.4s ease-out',
+    cursor: 'pointer',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
   },
   gifName: {
     marginTop: '8px',
