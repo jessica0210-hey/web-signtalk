@@ -152,13 +152,20 @@ function LoginWrapper() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is authenticated, check if they're an admin and redirect to dashboard
+        // User is authenticated, check if they're an admin and email is verified
         const checkAdminAndRedirect = async () => {
           try {
             const userDocRef = doc(firestore, 'users', user.uid);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists() && userDoc.data().userType === 'admin') {
-              navigate('/dashboardPage', { replace: true });
+              // Check if email is verified before redirecting
+              if (user.emailVerified) {
+                navigate('/dashboardPage', { replace: true });
+              } else {
+                // Email not verified, sign them out
+                console.log('Email not verified in onAuthStateChanged - signing out');
+                await auth.signOut();
+              }
             } else {
               // Not an admin, sign them out
               await auth.signOut();
@@ -243,7 +250,7 @@ function LoginWrapper() {
           if (!user.emailVerified) {
             console.log('Blocking login - email not verified in Firebase Auth');
             await auth.signOut();
-            setShowUnverifiedPopup(true);
+            setErrorMsg('Your account is not verified. Please check your email for the verification link.');
             setPassword('');
             setLoading(false);
             return;
@@ -258,7 +265,7 @@ function LoginWrapper() {
           return;
         } else if (!userDoc.exists()) {
           console.log('User document does not exist, checking for pending admin account...');
-          // Sign out the current user first since we need to check for pending admin
+          // Sign out the current user first since we need to check for p ending admin
           await auth.signOut();
           
           // Check if this is a pending admin account
@@ -465,7 +472,7 @@ function LoginWrapper() {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000,
+    zIndex: 2000, // Higher z-index to appear above loading spinner
     animation: 'modalFadeIn 0.3s ease-out forwards',
     backdropFilter: 'blur(3px)'
   };
@@ -477,7 +484,7 @@ function LoginWrapper() {
     minHeight: '220px',
     boxShadow: '0 20px 60px rgba(109, 37, 147, 0.3), 0 8px 32px rgba(0, 0, 0, 0.2)',
     overflow: 'hidden',
-    zIndex: 1001,
+    zIndex: 2001, // Higher z-index to appear above loading spinner
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     color: '#6D2593',
     position: 'absolute',
