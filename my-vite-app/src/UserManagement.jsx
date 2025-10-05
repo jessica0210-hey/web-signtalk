@@ -355,22 +355,6 @@ function UserManagement() {
     }
   }, [showGeneralSuccessModal, showGeneralErrorModal]);
 
-  // Helper function to create a simple hash (for basic security)
-  const createPasswordHash = async (password) => {
-    try {
-      // Simple hash using SubtleCrypto API (available in browsers)
-      const encoder = new TextEncoder();
-      const data = encoder.encode(password);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      return hashHex;
-    } catch (error) {
-      console.warn('Hashing not available, storing plain text password:', error);
-      return password; // Fallback to plain text if hashing fails
-    }
-  };
-
   // Smooth tab change handler
   const handleTabChange = (newTab) => {
     if (newTab === activeTab || isSliding) return;
@@ -828,9 +812,9 @@ function UserManagement() {
           console.log('Verification link for', adminEmail.trim(), ':', result.data.verificationLink);
           
           if (result.data.emailSent) {
-            showSuccess(`Admin account created successfully for ${adminEmail.trim()}!\n\nA verification email has been sent to their email address. The new admin must click the verification link before they can log in.\n\n🔗 Verification link is also available in browser console for backup.`);
+            showSuccess(`Admin account created successfully for ${adminEmail.trim()}!\n\nA verification email has been sent to their email address. The new admin must click the verification link before they can log in.`);
           } else {
-            showSuccess(`Admin account created successfully for ${adminEmail.trim()}!\n\n⚠️ Email sending failed. Please manually share this verification link with the new admin:\n\n${result.data.verificationLink}\n\nThey must click this link before they can log in.`);
+            showSuccess(`Admin account created successfully for ${adminEmail.trim()}!\n\nEmail sending failed. Please manually share this verification link with the new admin:\n\n${result.data.verificationLink}\n\nThey must click this link before they can log in.`);
           }
         } else {
           setShowAddAdminSuccess(true);

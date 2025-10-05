@@ -2,3 +2,5 @@ node_modules/
 *.log
 .firebase/
 .firebaserc
+.env
+.env.local

@@ -9,7 +9,6 @@ import GenerateReport from './GenerateReport';
 import Datasets from './Datasets';
 import ForgotPass from './ForgotPass';
 import UserManagement from './UserManagement';
-import EmailVerification from './EmailVerification';
 import ProtectedRoute from './components/ProtectedRoute';
 import { auth, firestore } from './firebase';
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
@@ -240,43 +239,18 @@ function LoginWrapper() {
         }
         
         if (userDoc.exists() && userDoc.data().userType === 'admin') {
-          // Check if email is verified for admin accounts
-          const userData = userDoc.data();
-          console.log('Admin user data:', userData);
-          console.log('emailVerified:', userData.emailVerified);
-          console.log('accountStatus:', userData.accountStatus);
-          console.log('Firebase Auth emailVerified:', user.emailVerified);
-          
-          // If Firebase Auth says email is verified but our Firestore doesn't, update it
-          if (user.emailVerified && (userData.emailVerified === false || userData.accountStatus === 'pending')) {
-            console.log('Firebase Auth email verified but Firestore not updated. Updating now...');
-            try {
-              // Call our Cloud Function to update the Firestore document
-              const { httpsCallable } = await import('firebase/functions');
-              const { functions } = await import('./firebase');
-              const verifyAdminEmail = httpsCallable(functions, 'verifyAdminEmail');
-              const result = await verifyAdminEmail({ email: user.email });
-              console.log('Auto-verification result:', result.data);
-              
-              if (result.data.success) {
-                // Continue with login since verification was successful
-                console.log('Auto-verification successful, continuing with login');
-              } else {
-                console.log('Auto-verification failed, but Firebase Auth is verified, so allowing login');
-              }
-            } catch (error) {
-              console.error('Auto-verification error:', error);
-              // Continue anyway since Firebase Auth is verified
-            }
-          } else if (userData.emailVerified === false || userData.accountStatus === 'pending') {
-            // Admin account exists but email not verified
-            console.log('Blocking login - email not verified or account pending');
+          // Check if email is verified using Firebase Auth
+          if (!user.emailVerified) {
+            console.log('Blocking login - email not verified in Firebase Auth');
             await auth.signOut();
             setShowUnverifiedPopup(true);
             setPassword('');
             setLoading(false);
             return;
           }
+          
+          // Email is verified, allow login
+          console.log('Admin login successful - email verified');
           
           // Clear browser history and navigate to dashboard
           window.history.replaceState(null, '', '/dashboardPage');
@@ -1035,7 +1009,6 @@ function App() {
         <Route path="/" element={<LoginWrapper />} />
         <Route path="/login" element={<LoginWrapper />} />
         <Route path="/forgotpass" element={<ForgotPass />} />
-        <Route path="/verify-email" element={<EmailVerification />} />
         <Route 
           path="/dashboardPage" 
           element={

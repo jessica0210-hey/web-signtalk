@@ -4,6 +4,14 @@ const admin = require("firebase-admin");
 const cors = require("cors")({origin: true});
 const nodemailer = require("nodemailer");
 
+// Load environment variables from .env file ONLY for local emulator
+// Do NOT load in production to avoid conflicts with secrets
+const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+if (isEmulator) {
+  logger.info('Running in emulator mode, loading .env file');
+  require('dotenv').config();
+}
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
@@ -40,8 +48,13 @@ const sendVerificationEmail = async (email, verificationLink, adminName) => {
   try {
     const transporter = createTransporter();
     
+    const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+    const emailUser = isEmulator 
+      ? (process.env.LOCAL_EMAIL_USER || "signtalk625@gmail.com")
+      : (process.env.EMAIL_USER || "signtalk625@gmail.com");
+    
     const mailOptions = {
-      from: `SignTalk Admin <${process.env.EMAIL_USER || "signtalk625@gmail.com"}>`,
+      from: `SignTalk Admin <${emailUser}>`,
       to: email,
       subject: "Verify your SignTalk Admin Account",
       html: `
@@ -127,24 +140,17 @@ exports.resetUserPassword = onCall({
       password: newPassword,
     });
 
-    // Also update the password hash in Firestore if document exists
+    // Update password metadata in Firestore (without storing the password itself)
     const userDocRef = admin.firestore().collection("users").doc(userRecord.uid);
     const userDoc = await userDocRef.get();
 
     if (userDoc.exists) {
-      // Hash the new password for Firestore storage
-      const crypto = require("crypto");
-      const hashedPassword = crypto.createHash("sha256")
-          .update(newPassword)
-          .digest("hex");
-
       await userDocRef.update({
-        password: hashedPassword,
         passwordUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
         passwordUpdatedBy: adminUid,
       });
 
-      logger.info(`Updated Firestore password hash for ${email}`);
+      logger.info(`Updated password metadata for ${email}`);
     }
 
     logger.info(`Successfully reset password for ${email}`);
@@ -280,9 +286,19 @@ exports.createAdminAccount = onCall({
 
     logger.info(`Created Firebase Auth account: ${userRecord.uid}`);
     
-    // Generate email verification link
-    const verificationLink = await admin.auth().generateEmailVerificationLink(email);
-    logger.info(`Generated email verification link for ${email}`);
+    // Generate email verification link with redirect to login page
+    const appUrl = process.env.APP_URL || 'http://localhost:5175';
+    logger.info(`Using app URL for verification: ${appUrl}`);
+    
+    const actionCodeSettings = {
+      // URL to redirect after email verification (login page)
+      url: appUrl,
+      // This must be false to let Firebase handle verification completely
+      handleCodeInApp: false,
+    };
+    
+    const verificationLink = await admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
+    logger.info(`Generated email verification link for ${email}: ${verificationLink}`);
 
     // Try to send verification email, but don't fail if it doesn't work
     let emailSent = false;
@@ -311,27 +327,17 @@ exports.createAdminAccount = onCall({
       }
     }
 
-    // Hash password for Firestore
-    const crypto = require("crypto");
-    const hashedPassword = crypto.createHash("sha256")
-        .update(password)
-        .digest("hex");
-
-    // Create Firestore document with pending status until email is verified
+    // Create Firestore document (password is securely stored in Firebase Auth)
     const adminData = {
       name: name,
       email: email,
-      password: hashedPassword,
       userType: "admin",
       uid: userRecord.uid,
       formatted_uid: nextFormattedUID,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       createdBy: adminUid,
-      accountStatus: "pending", // Set to pending until email verification
       authCreated: true,
-      emailVerified: false,
       verificationLink: verificationLink,
-      passwordHashMethod: "sha256",
     };
 
     await admin.firestore()
@@ -431,82 +437,3 @@ exports.getUserInfo = onCall({
   }
 });
 
-/**
- * Cloud Function to verify admin email and activate account
- * Callable from client-side when verification link is clicked
- */
-exports.verifyAdminEmail = onCall({
-  cors: true,
-}, async (request) => {
-  try {
-    const {email} = request.data;
-
-    logger.info(`Email verification requested for ${email}`);
-
-    // Get user by email from Firebase Auth
-    const userRecord = await admin.auth().getUserByEmail(email);
-    
-    // Check if user exists in Firestore
-    const userDoc = await admin.firestore()
-        .collection("users")
-        .doc(userRecord.uid)
-        .get();
-
-    if (!userDoc.exists) {
-      throw new Error("User document not found");
-    }
-
-    const userData = userDoc.data();
-    
-    // Check if this is an admin account
-    if (userData.userType !== "admin") {
-      throw new Error("Only admin accounts require email verification");
-    }
-
-    // Check if already verified
-    if (userData.emailVerified === true && userData.accountStatus === "active") {
-      return {
-        success: true,
-        message: "Email already verified",
-        alreadyVerified: true,
-      };
-    }
-
-    // Update Firebase Auth email verification status (might already be done by the client)
-    // But let's make sure it's set to true
-    await admin.auth().updateUser(userRecord.uid, {
-      emailVerified: true,
-    });
-
-    // Update Firestore document to activate account
-    await admin.firestore()
-        .collection("users")
-        .doc(userRecord.uid)
-        .update({
-          emailVerified: true,
-          accountStatus: "active",
-          verifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-
-    logger.info(`Email verified and account activated for ${email}`);
-
-    return {
-      success: true,
-      message: `Email verified successfully for ${email}. You can now log in.`,
-      activated: true,
-    };
-  } catch (error) {
-    logger.error("Error verifying email:", error);
-
-    let errorMessage = "Failed to verify email";
-    if (error.code === "auth/user-not-found") {
-      errorMessage = "User not found";
-    } else if (error.code === "auth/invalid-email") {
-      errorMessage = "Invalid email address";
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
-    throw new Error(errorMessage);
-  }
-});
