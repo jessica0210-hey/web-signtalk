@@ -216,6 +216,44 @@ exports.deleteUserAccount = onCall({
       logger.info(`Deleted Firestore document for ${email}`);
     }
 
+    // Delete all chat messages where the user is a participant
+    logger.info(`Deleting chat documents and messages for user ${userRecord.uid}...`);
+    const chatsRef = admin.firestore().collection("chats");
+    
+    // Find all chats where the user is in the users array
+    const userChatsQuery = await chatsRef
+        .where("users", "array-contains", userRecord.uid)
+        .get();
+    
+    let deletedChatsCount = 0;
+    let deletedMessagesCount = 0;
+    
+    if (!userChatsQuery.empty) {
+      // Delete each chat document and its messages subcollection
+      for (const chatDoc of userChatsQuery.docs) {
+        // Delete all messages in the subcollection first
+        const messagesRef = chatDoc.ref.collection("messages");
+        const messagesSnapshot = await messagesRef.get();
+        
+        if (!messagesSnapshot.empty) {
+          const messageBatch = admin.firestore().batch();
+          messagesSnapshot.docs.forEach((msgDoc) => {
+            messageBatch.delete(msgDoc.ref);
+            deletedMessagesCount++;
+          });
+          await messageBatch.commit();
+        }
+        
+        // Then delete the chat document itself
+        await chatDoc.ref.delete();
+        deletedChatsCount++;
+      }
+      
+      logger.info(`Deleted ${deletedChatsCount} chat documents and ${deletedMessagesCount} messages for ${email}`);
+    } else {
+      logger.info(`No chat documents found for ${email}`);
+    }
+
     // Also check for any documents with matching email (for pending accounts)
     const usersRef = admin.firestore().collection("users");
     const emailQuery = await usersRef.where("email", "==", email).get();
@@ -229,7 +267,7 @@ exports.deleteUserAccount = onCall({
       logger.info(`Deleted ${emailQuery.docs.length} additional documents for ${email}`);
     }
 
-    logger.info(`Successfully deleted account for ${email}`);
+    logger.info(`Successfully deleted account for ${email} and ${deletedChatsCount} associated chats`);
 
     return {
       success: true,
@@ -436,4 +474,3 @@ exports.getUserInfo = onCall({
     throw new Error(errorMessage);
   }
 });
-
