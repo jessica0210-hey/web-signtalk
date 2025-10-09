@@ -5,10 +5,11 @@ import headerImage from '../assets/headerImage.png';
 import logo from '../assets/signtalk_logo.png';
 import profileBtn from '../assets/profile.png'; 
 import logoutBtn from '../assets/logout_btn.png';
+import apiBtn from '../assets/api_.btn.png';
 import dialogImg from '../assets/dialogImg.png';
 import { auth, firestore } from '../firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, getDocFromServer } from 'firebase/firestore'; 
+import { doc,setDoc,serverTimestamp,getDoc, getDocFromServer } from 'firebase/firestore'; 
 
 // Add CSS animations for modal effects
 const modalAnimations = `
@@ -126,10 +127,14 @@ function AdminLayout({ children, title }) {
   const location = useLocation(); // <-- get current route
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [showApiInput, setShowApiInput] = useState(false);
+  const [apiKey, setApiKey] = useState('');
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const [adminName, setAdminName] = useState('');
   const dropdownRef = useRef(null);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   // Listen to auth state changes and fetch admin name accordingly
   useEffect(() => {
@@ -245,15 +250,27 @@ function AdminLayout({ children, title }) {
     fontFamily: 'Arial, sans-serif'
   };
 
-
-
-  const logoutBtnStyle = {
-    width: '140px', 
-    height: '80px',
+  const apiBtnStyle = {
+    width: '135px', 
+    height: '50px',
     cursor: 'pointer',
     position: 'absolute',
-    top: '18px', 
-    right: -12,
+    top: '-18px', 
+    right: -10,
+    zIndex: 1000,
+    borderRadius: '8px',
+    animation: 'logoutButtonPopup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transition: 'all 0.3s ease',
+    transform: 'scale(1)'
+  }
+
+  const logoutBtnStyle = {
+    width: '135px', 
+    height: '39px',
+    cursor: 'pointer',
+    position: 'absolute',
+    top: '32px', 
+    right: -10,
     zIndex: 1000,
     borderRadius: '8px',
     animation: 'logoutButtonPopup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -294,6 +311,40 @@ function AdminLayout({ children, title }) {
     fontFamily: 'Arial, sans-serif'
   };
 
+   // Add this useEffect to load the API key when component mounts
+  useEffect(() => {
+  const loadApiKey = async () => {
+    console.log('useEffect triggered - attempting to load API key');
+    
+    try {
+      const apiId = 'serverApi';
+      console.log('Using apiId:', apiId);
+      console.log('Firestore instance:', firestore);
+      
+      const docRef = doc(firestore, 'BaseUrl', apiId);
+      console.log('Document reference created:', docRef);
+      
+      const docSnap = await getDoc(docRef);
+      console.log('Document snapshot received:', docSnap);
+      console.log('Document exists?', docSnap.exists());
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log('Document data:', data);
+        const savedApiKey = data.URL;
+        console.log('Setting API key to:', savedApiKey);
+        setApiKey(savedApiKey);
+      } else {
+        console.log('No API key document found in Firestore');
+      }
+    } catch (error) {
+      console.error('Error loading API key:', error);
+      console.error('Error details:', error.message);
+    }
+  };
+  loadApiKey();
+}, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -303,6 +354,34 @@ function AdminLayout({ children, title }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  
+  const customAlert = (message) => {
+  setAlertMessage(message);
+  setShowAlert(true);
+};
+
+  const handleApiInput = () => {
+  setShowApiInput(true);
+  setIsOpen(false);
+  };
+
+  const handleSaveApiKey = async() => {
+    const apiId = 'serverApi';
+    console.log('Attempting to save to Firebase...');
+    // Save to Firestore
+    await setDoc(doc(firestore, 'BaseUrl', apiId), {
+      URL: apiKey,
+      createdAt: serverTimestamp()
+    });
+
+    console.log('API Key saved successfully to Firebase!');
+    customAlert('URL saved successfully!');
+    
+    // Close modal and reset
+    setShowApiInput(false);
+    setApiKey('');
+    setIsOpen(false);
+  };
 
   const handleLogout = () => {
     setShowLogoutPopup(true);
@@ -425,6 +504,30 @@ function AdminLayout({ children, title }) {
             }}
           />
           {isOpen && (
+             <div style={{
+              position: 'absolute',
+              top: '100%',
+              right: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              marginTop: '8px',
+              zIndex: 1000
+            }}>
+             <img
+              src={apiBtn}
+              alt="API"
+              style={apiBtnStyle}
+              onClick={handleApiInput}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'scale(1.05)';
+                e.target.style.filter = 'brightness(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'scale(1)';
+                e.target.style.filter = 'brightness(1)';
+              }}
+            />
             <img 
               src={logoutBtn} 
               alt="Logout" 
@@ -439,9 +542,140 @@ function AdminLayout({ children, title }) {
                 e.target.style.filter = 'brightness(1)';
               }}
             />
+          </div>
           )}
         </div>
       </header>
+
+    {showAlert && (<>
+        {/* Backdrop */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 3000
+          }}
+          onClick={() => setShowAlert(false)}
+        />
+        
+        {/* Alert Box */}
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '24px',
+          borderRadius: '12px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+          zIndex: 3001,
+          minWidth: '500px',
+          maxWidth: '600px',
+          textAlign: 'center'
+        }}>
+          <p style={{
+            margin: '0 0 20px 0',
+            fontSize: '25px',
+            color: '#333',
+            lineHeight: '1.5'
+          }}>
+            {alertMessage}
+          </p>
+          <button
+            onClick={() => setShowAlert(false)}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#7f49d1ff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '20px',
+              fontWeight: '500'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#7f49d1ff'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = '#5e2b8c'}
+          >
+            OK
+          </button>
+        </div>
+      </>
+    )}
+
+       {/* API Input Modal */}
+        {showApiInput && (<>
+        {/* Backdrop */}
+          <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1999
+        }}
+          onClick={() => {
+          setShowApiInput(false);
+        }}/>  
+        {/* Modal Content */}
+          <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          zIndex: 2000,
+          minWidth: '600px'
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Enter Base URL</h3>
+          <input
+          type="text"
+          placeholder="Enter URL"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          style={{
+          width: '100%',
+          padding: '8px',
+          borderRadius: '4px',
+          border: '1px solid #ccc',
+          fontSize: '14px',
+          outline: 'none',
+          boxSizing: 'border-box',
+          marginBottom: '12px'
+        }}
+          onFocus={(e) => e.target.style.borderColor = '#75408eff'}
+          onBlur={(e) => e.target.style.borderColor = '#ccc'}
+        />
+          <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+          onClick={handleSaveApiKey}
+          style={{
+          flex: 1,
+          padding: '10px',
+          backgroundColor: '#d849e8ff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#e17ac7ff'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#d849e8ff'}
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </>
+)}
 
       {/* Content */}
       <main style={contentStyle}>{children}</main>
