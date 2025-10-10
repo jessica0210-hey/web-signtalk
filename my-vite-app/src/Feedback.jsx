@@ -323,8 +323,7 @@ function Feedback() {
             <span style={{ ...styles.colHeader, marginLeft: '360px' }}>FEEDBACK</span>
             <div style={styles.iconGroup}>
               <div style={{ position: 'relative' }}>
-                <img
-                  id="filter-icon"
+                <img id="filter-icon"
                   src={filterIcon}
                   alt="filter"
                   className="icon"
@@ -334,8 +333,7 @@ function Feedback() {
                     }
                   }}
                 />
-                <input
-                  id="date-filter-input"
+                <input id="date-filter-input"
                   ref={dateInputRef}
                   type="date"
                   value={selectedDate}

@@ -703,7 +703,7 @@ function DashboardPage() {
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
           >
-            <img src={reportIcon} alt="Reports" style={btnIconStyle} />
+            <img id="reportIcon" src={reportIcon} alt="Reports" style={btnIconStyle} />
             <p style={btnTextStyle}>REPORTS</p>
           </div>
           <div id="btnUsers"

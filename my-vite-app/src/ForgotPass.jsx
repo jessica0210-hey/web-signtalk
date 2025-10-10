@@ -487,7 +487,8 @@ function LoginWrapper() {
               100% { transform: rotate(360deg); }
             }
           `}</style>
-          <div id="forgotpass-loading-spinner" style={{
+          <div id="forgotpass-loading-spinner" 
+          style={{
             position: 'fixed',
             top: 0,
             left: 0,

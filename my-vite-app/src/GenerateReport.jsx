@@ -780,7 +780,8 @@ function GenerateReports() {
 
   return (
     <AdminLayout title="GENERATE REPORT">
-      <div id="page-generateReports" style={{ padding: "16px", height: "80vh" }}>
+      <div id="page-generateReports" 
+      style={{ padding: "16px", height: "80vh" }}>
         {selectedCols.length === 0 ? (
           // Show message when no columns are selected
           <div style={{

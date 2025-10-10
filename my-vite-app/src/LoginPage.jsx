@@ -981,7 +981,8 @@ function LoginWrapper() {
                 gap: '16px',
                 marginTop: '20px'
               }}>
-                <button id="closeUnverifiedBtn"
+                <button 
+                id="closeUnverifiedBtn"
                   onClick={closeUnverifiedPopup} 
                   style={confirmBtnStyle}
                   onMouseEnter={(e) => {

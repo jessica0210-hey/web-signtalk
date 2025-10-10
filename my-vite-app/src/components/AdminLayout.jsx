@@ -618,7 +618,7 @@ function AdminLayout({ children, title }) {
       {showApiInput && (
         <>
           {/* Backdrop */}
-          <div
+          <div id="apiModalBackdrop"
             style={{
               position: 'fixed',
               top: 0,

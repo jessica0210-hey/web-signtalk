@@ -134,7 +134,7 @@ function ProtectedRoute({ children }) {
         flexDirection: 'column'
       }}>
         <div 
-          id="auth-loading-spinner"
+          id="auth-loadingspinner"
           style={{
           width: '50px',
           height: '50px',
