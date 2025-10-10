@@ -458,7 +458,7 @@ function AdminLayout({ children, title }) {
       {/* Header */}
       <header style={headerStyle}>
         <div style={leftHeaderStyle}>
-          <img src={logo} alt="Logo" style={logoStyle} onClick={() => navigate('/dashboardPage')} />
+          <img id="signtalk-logo" src={logo} alt="Logo" style={logoStyle} onClick={() => navigate('/dashboardPage')} />
           {/* Render "Hello Admin {name}!" only on Dashboard page */}
           {location.pathname === '/dashboardPage' && (
             <span style={{
@@ -488,6 +488,7 @@ function AdminLayout({ children, title }) {
 
         <div ref={dropdownRef} style={{ position: 'relative' }}>
           <img 
+            id="profileButton"
             src={profileBtn} 
             alt="Profile Icon" 
             style={profileBtnStyle} 
@@ -515,6 +516,7 @@ function AdminLayout({ children, title }) {
               zIndex: 1000
             }}>
              <img
+              id="apiButton"
               src={apiBtn}
               alt="API"
               style={apiBtnStyle}
@@ -529,6 +531,7 @@ function AdminLayout({ children, title }) {
               }}
             />
             <img 
+              id="logoutButton" 
               src={logoutBtn} 
               alt="Logout" 
               style={logoutBtnStyle} 
@@ -550,6 +553,7 @@ function AdminLayout({ children, title }) {
     {showAlert && (<>
         {/* Backdrop */}
         <div
+          id="alertOverlay"
           style={{
             position: 'fixed',
             top: 0,
@@ -563,7 +567,9 @@ function AdminLayout({ children, title }) {
         />
         
         {/* Alert Box */}
-        <div style={{
+        <div
+          id="alertBox" 
+          style={{
           position: 'fixed',
           top: '50%',
           left: '50%',
@@ -577,7 +583,7 @@ function AdminLayout({ children, title }) {
           maxWidth: '600px',
           textAlign: 'center'
         }}>
-          <p style={{
+          <p id="alertMessage" style={{
             margin: '0 0 20px 0',
             fontSize: '25px',
             color: '#333',
@@ -586,6 +592,7 @@ function AdminLayout({ children, title }) {
             {alertMessage}
           </p>
           <button
+            id="alertOkBtn"
             onClick={() => setShowAlert(false)}
             style={{
               padding: '10px 24px',
@@ -606,6 +613,7 @@ function AdminLayout({ children, title }) {
       </>
     )}
 
+<<<<<<< HEAD
       {/* API Input Modal */}
       {showApiInput && (
         <>
@@ -711,14 +719,88 @@ function AdminLayout({ children, title }) {
           </div>
         </>
       )}
+=======
+       {/* API Input Modal */}
+        {showApiInput && (<>
+        {/* Backdrop */}
+          <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 1999
+        }}
+          onClick={() => {
+          setShowApiInput(false);
+        }}/>  
+        {/* Modal Content */}
+          <div id="apiModal" style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+          zIndex: 2000,
+          minWidth: '600px'
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Enter Base URL</h3>
+          <input
+          id="apiUrlInput" 
+          type="text"
+          placeholder="Enter URL"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          style={{
+          width: '100%',
+          padding: '8px',
+          borderRadius: '4px',
+          border: '1px solid #ccc',
+          fontSize: '14px',
+          outline: 'none',
+          boxSizing: 'border-box',
+          marginBottom: '12px'
+        }}
+          onFocus={(e) => e.target.style.borderColor = '#75408eff'}
+          onBlur={(e) => e.target.style.borderColor = '#ccc'}
+        />
+          <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+          id="saveApiButton"
+          onClick={handleSaveApiKey}
+          style={{
+          flex: 1,
+          padding: '10px',
+          backgroundColor: '#d849e8ff',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#e17ac7ff'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#d849e8ff'}
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </>
+)}
+>>>>>>> c7d02ad (Initial Commit)
 
       {/* Content */}
       <main style={contentStyle}>{children}</main>
 
       {/* Logout Confirmation Popup */}
       {showLogoutPopup && (
-        <div style={popupNotifStyle}>
-          <div style={popupStyle}>
+        <div id="logoutPopup" style={popupNotifStyle}>
+          <div id="logoutPopupBox" style={popupStyle}>
             <img 
               src={dialogImg} 
               alt="Dialog Illustration" 
@@ -753,6 +835,7 @@ function AdminLayout({ children, title }) {
             {!loggingOut ? (
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
                 <button
+                  id="cancelLogoutBtn"
                   className="modal-btn modal-btn-cancel"
                   onClick={cancelLogout}
                   style={cancelLogoutBtnStyle}
@@ -776,6 +859,7 @@ function AdminLayout({ children, title }) {
                   Cancel
                 </button>
                 <button
+                  id="confirmLogoutBtn"
                   className="modal-btn modal-btn-success"
                   onClick={confirmLogout}
                   style={confirmLogoutBtnStyle}

@@ -412,7 +412,7 @@ function Datasets() {
   return (
     <AdminLayout title="DATASETS">
       {/* Upload Section */}
-      <div style={styles.uploadBox}>
+      <div id="uploadBox" style={styles.uploadBox}>
         <label htmlFor="file-upload" style={styles.uploadContent}>
           <img 
             src={uploadIcon} 
@@ -439,6 +439,7 @@ function Datasets() {
 
        {/*Keyword input*/}
           <input
+          id="keywordInput"
           type="text"
           placeholder="Enter keyword (e.g. hello)"
           value={keyword}
@@ -452,7 +453,7 @@ function Datasets() {
         />
 
        {/*Upload Button*/}
-        <button onClick={handleUpload} 
+        <button id="uploadButton" onClick={handleUpload} 
         disabled={!selectedFile || !keyword}
         style={{...styles.uploadBtn, background:!selectedFile || !keyword ? "#aaa" : "#4CAF50",}} >
         {isUploading ? "Uploading..." : "Upload"}
@@ -472,6 +473,7 @@ function Datasets() {
           <h2 style={styles.sectionTitle}>Uploaded GIFs</h2>
           <div style={styles.searchBox}>
             <input 
+              id="searchGifInput"
               type="text" 
               placeholder="Search GIF..." 
               value={searchTerm}
@@ -488,7 +490,7 @@ function Datasets() {
             <p style={styles.emptyText}>No GIFs match your search "{searchTerm}".</p>
           ) : (
             filteredGifs.map((item, index) => (
-              <div 
+              <div id={`gifCard-${item.keyword}`}
                 key={`${item.keyword}-${index}`} 
                 style={{
                   ...styles.card,
@@ -509,8 +511,8 @@ function Datasets() {
                   card.style.backgroundColor = '#f5f5f5';
                 }}
               >
-                <img src={item.gifUrl} alt={item.keyword} style={styles.gif} />
-                <p style={styles.gifName}>{item.keyword}</p>
+                <img id={`gifImage-${item.keyword}`} src={item.gifUrl} alt={item.keyword} style={styles.gif} />
+                <p id={`gifName-${item.keyword}`} style={styles.gifName}>{item.keyword}</p>
               </div>
             ))
           )}
@@ -519,7 +521,7 @@ function Datasets() {
 
       {/* Context Menu */}
       {contextMenu.show && (
-        <div 
+        <div id="contextMenu"
           style={{
             position: 'fixed',
             left: contextMenu.x,
@@ -534,7 +536,7 @@ function Datasets() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div 
+          <div id="contextMenuOpen"
             style={{
               padding: '12px 16px',
               cursor: 'pointer',
@@ -551,7 +553,7 @@ function Datasets() {
           >
             Open
           </div>
-          <div 
+          <div id="contextMenuRename"
             style={{
               padding: '12px 16px',
               cursor: 'pointer',
@@ -568,7 +570,7 @@ function Datasets() {
           >
             Rename
           </div>
-          <div 
+          <div id="contextMenuDelete"
             style={{
               padding: '12px 16px',
               cursor: 'pointer',
@@ -595,7 +597,8 @@ function Datasets() {
 
       {/* Rename Modal */}
       {showRenameModal && (
-        <div style={{
+        <div id="renameModalOverlay" 
+          style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -607,7 +610,8 @@ function Datasets() {
           alignItems: 'center',
           zIndex: 1002
         }}>
-          <div style={{
+          <div id="renameModalBox"
+            style={{
             backgroundColor: 'white',
             padding: '30px',
             borderRadius: '12px',
@@ -617,7 +621,7 @@ function Datasets() {
             animation: 'scaleInModal 0.3s ease-out',
             transform: 'scale(1)'
           }}>
-            <h3 style={{ 
+            <h3 id="renameModalTitle" style={{ 
               margin: '0 0 20px 0', 
               color: '#333', 
               fontSize: '18px'
@@ -625,6 +629,7 @@ function Datasets() {
               Rename Dataset
             </h3>
             <input
+              id="renameInput"
               type="text"
               value={newKeyword}
               onChange={(e) => setNewKeyword(e.target.value)}
@@ -653,8 +658,8 @@ function Datasets() {
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
               autoFocus
             />
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button
+            <div id="renameButtonContainer" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button id="cancelRenameBtn"
                 onClick={() => {
                   setShowRenameModal(false);
                   setNewKeyword('');
@@ -681,7 +686,7 @@ function Datasets() {
               >
                 Cancel
               </button>
-              <button
+              <button id="confirmRenameBtn"
                 onClick={confirmRename}
                 style={{
                   padding: '10px 20px',
@@ -723,7 +728,7 @@ function Datasets() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div 
+        <div id="deleteModalOverlay"
           style={{
             position: 'fixed',
             top: 0,
@@ -748,7 +753,7 @@ function Datasets() {
           tabIndex={0}
           autoFocus
         >
-          <div 
+          <div id="deleteModalBox"
             style={{
               backgroundColor: 'white',
               padding: '30px',
@@ -775,10 +780,10 @@ function Datasets() {
                 color: '#dc3545'
               }}>⚠️</div>
               <div>
-                <h3 style={{ margin: '0', color: '#333', fontSize: '18px' }}>
+                <h3 id="deleteModalTitle" style={{ margin: '0', color: '#333', fontSize: '18px' }}>
                   Delete Dataset
                 </h3>
-                <p style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
+                <p id="deleteModalText" style={{ margin: '5px 0 0 0', color: '#666', fontSize: '14px' }}>
                   This action cannot be undone
                 </p>
               </div>
@@ -787,8 +792,8 @@ function Datasets() {
               Are you sure you want to delete the dataset "<strong>{selectedItem?.keyword}</strong>"? 
               This will permanently remove all associated data and cannot be recovered.
             </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button
+            <div id="deleteButtonContainer" style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button id="cancelDeleteBtn"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setSelectedItem(null);
@@ -814,7 +819,7 @@ function Datasets() {
               >
                 Cancel
               </button>
-              <button
+              <button id="confirmDeleteBtn"
                 onClick={confirmDelete}
                 style={{
                   padding: '10px 20px',
@@ -856,7 +861,7 @@ function Datasets() {
 
       {/* Image Popup Modal */}
       {showImageModal && (
-        <div 
+        <div id="imagePopupOverlay"
           style={{
             position: 'fixed',
             top: 0,
@@ -872,7 +877,7 @@ function Datasets() {
           }}
           onClick={() => setShowImageModal(false)}
         >
-          <div 
+          <div id="imagePopupBox"
             style={{
               position: 'relative',
               maxWidth: '90vw',
@@ -887,7 +892,7 @@ function Datasets() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
-            <button
+            <button id="closeImagePopupBtn"
               onClick={() => setShowImageModal(false)}
               style={{
                 position: 'absolute',
@@ -914,7 +919,7 @@ function Datasets() {
             </button>
             
             {/* GIF title */}
-            <h3 style={{
+            <h3 id="imagePopupTitle" style={{
               margin: '0 0 15px 0',
               color: '#333',
               fontSize: '20px',
@@ -925,7 +930,7 @@ function Datasets() {
             </h3>
             
             {/* GIF image */}
-            <img
+            <img id="imagePopupGif"
               src={selectedItem?.gifUrl}
               alt={selectedItem?.keyword}
               style={{
@@ -937,13 +942,13 @@ function Datasets() {
             />
             
             {/* Action buttons */}
-            <div style={{
+            <div id="imagePopupButtonContainer" style={{
               display: 'flex',
               justifyContent: 'center',
               gap: '15px',
               marginTop: '20px'
             }}>
-              <button
+              <button id="renameFromPopupBtn"
                 onClick={handleRenameFromPopup}
                 style={{
                   padding: '12px 24px',
@@ -971,7 +976,7 @@ function Datasets() {
                 Rename
               </button>
               
-              <button
+              <button id="deleteFromPopupBtn"
                 onClick={handleDeleteFromPopup}
                 style={{
                   padding: '12px 24px',
@@ -1005,14 +1010,14 @@ function Datasets() {
 
       {/* Notification Toast */}
       {notification.show && (
-        <div style={{
+        <div id="notificationToast" style={{
           position: 'fixed',
           top: '20px',
           right: '20px',
           zIndex: 1004,
           animation: 'slideInRight 0.3s ease-out'
         }}>
-          <div style={{
+          <div id="notificationIcon" style={{
             backgroundColor: notification.type === 'success' ? '#28a745' :
                            notification.type === 'warning' ? '#ffc107' : '#dc3545',
             color: notification.type === 'warning' ? '#212529' : 'white',
@@ -1031,7 +1036,7 @@ function Datasets() {
               {notification.type === 'success' ? '✅' :
                notification.type === 'warning' ? '⚠️' : '❌'}
             </div>
-            <div style={{ flex: 1 }}>
+            <div id="notificationMessage" style={{ flex: 1 }}>
               {notification.message}
             </div>
           </div>

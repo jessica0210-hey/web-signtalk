@@ -878,7 +878,7 @@ function UserManagement() {
                 transform: `translateX(${activeTab === "users" ? "0%" : "100%"})`
               }}
             />
-            <button
+            <button id="tab-users"
               onClick={() => handleTabChange("users")}
               style={{
                 ...styles.tabBtn,
@@ -887,7 +887,7 @@ function UserManagement() {
             >
               Users
             </button>
-            <button
+            <button id="tab-admins"
               onClick={() => handleTabChange("admins")}
               style={{
                 ...styles.tabBtn,
@@ -900,7 +900,7 @@ function UserManagement() {
 
           <div style={styles.rightControls}>
             <div style={styles.searchBox}>
-              <input
+              <input id="user-search-input"
                 type="text"
                 placeholder="Search..."
                 className="searchInput"
@@ -910,7 +910,7 @@ function UserManagement() {
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 autoComplete="off"
               />
-              <button style={styles.searchBtn} onClick={handleSearch}>
+              <button id="user-search-btn" style={styles.searchBtn} onClick={handleSearch}>
                 <img src={searchIcon} alt="Search" style={styles.searchIcon} />
               </button>
             </div>
@@ -928,7 +928,7 @@ function UserManagement() {
           }}
         >
           {/* Fixed header */}
-          <table style={styles.table}>
+          <table id="user-admin-table-header" style={styles.table}>
             <thead>
               <tr>
                 <th style={{ ...styles.th, width: '15%' }}>ID</th>
@@ -941,17 +941,19 @@ function UserManagement() {
 
           {/* Scrollable body */}
           <div style={styles.tbodyContainer}>
-            <table style={styles.table}>
+            <table id="user-admin-table-body" style={styles.table}>
               <tbody>
                 {loading ? (
-                  <tr style={styles.row}>
+                  <tr id="loading-row"
+                  style={styles.row}>
                     <td colSpan={4} style={{ ...styles.td, textAlign: 'center', padding: '40px', borderRadius: '10px' }}>
                       Loading users...
                     </td>
                   </tr>
                 ) : (
                   (activeTab === "users" ? filteredUsers : filteredAdmins).length === 0 ? (
-                    <tr style={styles.row}>
+                    <tr id="no-users-row"
+                    style={styles.row}>
                       <td colSpan={4} style={{ ...styles.td, textAlign: 'center', padding: '40px', borderRadius: '10px' }}>
                         {searchTerm ? 'No users found matching your search.' : 'No users found.'}
                       </td>
@@ -966,7 +968,7 @@ function UserManagement() {
                         <td style={{ ...styles.td, width: '25%' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {activeTab === "users" && (
-                              <div 
+                              <div id="online-indicator"
                                 style={{
                                   ...styles.onlineIndicator,
                                   ...(item.isOnline ? styles.onlineStatus : styles.offlineStatus)
@@ -983,7 +985,7 @@ function UserManagement() {
                           </div>
                         </td>
                         <td style={{ ...styles.td, borderTopRightRadius: "10px", borderBottomRightRadius: "10px", textAlign: "right", width: '25%' }}>
-                          <button 
+                          <button id={`reset-btn-${item.id || i}`}  
                             style={styles.resetBtn}
                             onClick={() => handleResetPassword(item)}
                             onMouseEnter={(e) => {
@@ -999,7 +1001,7 @@ function UserManagement() {
                           >
                             Reset Password
                           </button>
-                          <button 
+                          <button id={`delete-btn-${item.id || i}`}
                             style={{
                               ...styles.deleteBtn,
                               opacity: (item.isCurrentUser && activeTab === "admins") ? 0.5 : 1,
@@ -1035,7 +1037,7 @@ function UserManagement() {
         </div>
 
         {activeTab === "admins" && (
-        <button 
+        <button id="add-admin-btn"
           style={styles.addBtn} 
           onClick={handleAddAdmin}
           onMouseEnter={(e) => {
@@ -1056,7 +1058,8 @@ function UserManagement() {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div style={{
+        <div id="delete-confirmation-modal"
+        style={{
           ...styles.modalOverlay,
           animation: 'fadeIn 0.3s ease-out'
         }}>
@@ -1072,7 +1075,7 @@ function UserManagement() {
               <p style={styles.modalSubtitle}>This action is permanent and cannot be undone.</p>
             </div>
             <div style={styles.modalButtons}>
-              <button 
+              <button id="delete-cancel-btn" 
                 style={{
                   ...styles.cancelBtn,
                   opacity: deleteLoading ? 0.6 : 1,
@@ -1097,7 +1100,7 @@ function UserManagement() {
               >
                 Cancel
               </button>
-              <button 
+              <button id="delete-confirm-btn"
                 style={{
                   ...styles.confirmDeleteBtn,
                   opacity: deleteLoading ? 0.8 : 1,
@@ -1145,11 +1148,12 @@ function UserManagement() {
 
       {/* Reset Password Modal */}
       {showResetPasswordModal && (
-        <div style={{
+        <div id="reset-password-modal" style={{
           ...styles.modalOverlay,
           animation: 'fadeIn 0.3s ease-out'
         }}>
-          <div style={{
+          <div id="reset-password-modal-content"
+          style={{
             ...styles.resetPasswordModal,
             animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
           }}>
@@ -1167,7 +1171,7 @@ function UserManagement() {
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>New Password:</label>
                 <div style={styles.passwordContainer}>
-                  <input
+                  <input id="reset-new-pass"
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -1185,7 +1189,7 @@ function UserManagement() {
                       e.target.style.transform = 'scale(1)';
                     }}
                   />
-                  <button
+                  <button id="toggle-new-pass-visibility"
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     style={styles.eyeButton}
@@ -1209,7 +1213,7 @@ function UserManagement() {
               <div style={styles.formGroup}>
                 <label style={styles.formLabel}>Confirm Password:</label>
                 <div style={styles.passwordContainer}>
-                  <input
+                  <input id="reset-confirm-pass"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -1227,7 +1231,7 @@ function UserManagement() {
                       e.target.style.transform = 'scale(1)';
                     }}
                   />
-                  <button
+                  <button id="toggle-confirm-pass-visibility"
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={styles.eyeButton}
@@ -1249,7 +1253,7 @@ function UserManagement() {
               </div>
             </div>
             <div style={styles.modalButtons}>
-              <button 
+              <button  id='reset-cancel-btn'
                 style={styles.cancelBtn}
                 onClick={cancelResetPassword}
                 disabled={resetPasswordLoading}
@@ -1270,7 +1274,7 @@ function UserManagement() {
               >
                 Cancel
               </button>
-              <button 
+              <button id='reset-confirm-btn'
                 style={{
                   ...styles.confirmResetBtn,
                   opacity: resetPasswordLoading ? 0.6 : 1,
@@ -1302,7 +1306,7 @@ function UserManagement() {
 
       {/* Add Admin Modal */}
       {showAddAdminModal && (
-        <div style={{
+        <div id="add-admin-modal" style={{
           ...styles.modalOverlay,
           animation: 'fadeIn 0.3s ease-out'
         }}>
@@ -1327,7 +1331,7 @@ function UserManagement() {
             
             <div style={styles.formGroup}>
               <label style={styles.addAdminLabel}>Name:</label>
-              <input
+              <input id="add-admin-name"
                 key={`admin-name-${showAddAdminModal ? 'open' : 'closed'}`}
                 type="text"
                 value={adminName}
@@ -1344,7 +1348,7 @@ function UserManagement() {
             
             <div style={styles.formGroup}>
               <label style={styles.addAdminLabel}>Email:</label>
-              <input
+              <input id="add-admin-email"
                 key={`admin-email-${showAddAdminModal ? 'open' : 'closed'}`}
                 type="email"
                 value={adminEmail}
@@ -1362,7 +1366,7 @@ function UserManagement() {
             <div style={styles.formGroup}>
               <label style={styles.addAdminLabel}>Password:</label>
               <div style={styles.passwordContainer}>
-                <input
+                <input id="add-admin-password"
                   key={`admin-password-${showAddAdminModal ? 'open' : 'closed'}`}
                   type={showPassword ? "text" : "password"}
                   value={adminPassword}
@@ -1375,7 +1379,7 @@ function UserManagement() {
                   data-lpignore="true"
                   data-form-type="other"
                 />
-                <button
+                <button id="add-admin-toggle-pass-visibility"
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={styles.eyeButton}
@@ -1410,14 +1414,14 @@ function UserManagement() {
             </div>
             
             <div style={styles.addAdminBtns}>
-              <button 
+              <button id="add-admin-cancel-btn"
                 onClick={cancelAddAdmin} 
                 style={styles.addAdminCancelBtn}
                 disabled={addAdminLoading}
               >
                 Cancel
               </button>
-              <button 
+              <button id="add-admin-confirm-btn"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1442,7 +1446,8 @@ function UserManagement() {
 
       {/* Add Admin Success Modal - FIXED */}
       {showAddAdminSuccess && (
-        <div style={{
+        <div id="add-admin-success-modal"
+        style={{
           position: 'fixed',
           top: 0,
           left: 0,
@@ -1498,7 +1503,7 @@ function UserManagement() {
             }}>
               New admin account has been created successfully!
             </p>
-            <button
+            <button id="add-admin-success-ok-btn"
               onClick={closeAddAdminSuccess}
               style={{
                 backgroundColor: '#38B000',

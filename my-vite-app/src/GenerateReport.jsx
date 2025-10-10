@@ -505,6 +505,7 @@ function GenerateReports() {
                   />
                 </button>
                 <button
+                  id="btnPrintReport"
                   onClick={handlePrint}
                   style={{
                     background: "transparent",
@@ -584,6 +585,7 @@ function GenerateReports() {
               {isLast && (
                 <div style={{ display: "flex", alignItems: "center", visibility: "visible" }}>
                   <button
+                    id="btnDropdownUsers"
                     onClick={() => setOpenDropdown(openDropdown === col ? null : col)}
                     style={{
                       background: "transparent",
@@ -688,7 +690,7 @@ function GenerateReports() {
 
     // Render rows per user index in each column
     return Array.from({ length: maxRows }).map((_, rowIdx) => (
-      <tr key={rowIdx}>
+      <tr key={rowIdx} id={`tableRow-${rowIdx}`}>
         {/* Default list user - only show if no columns are selected */}
         {selectedCols.length === 0 && (
           <td
@@ -719,6 +721,7 @@ function GenerateReports() {
           return (
             <td
               key={col}
+              id={`tableCol-${col}-${rowIdx}`}
               style={{
                 background: "#fff",
                 color: "#481872",
@@ -777,7 +780,7 @@ function GenerateReports() {
 
   return (
     <AdminLayout title="GENERATE REPORT">
-      <div style={{ padding: "16px", height: "80vh" }}>
+      <div id="page-generateReports" style={{ padding: "16px", height: "80vh" }}>
         {selectedCols.length === 0 ? (
           // Show message when no columns are selected
           <div style={{
@@ -802,6 +805,7 @@ function GenerateReports() {
               justifyContent: "center" 
             }}>
               <button
+                id="btnSelectUserCategories"
                 onClick={() => setOpenDropdown(openDropdown === "users" ? null : "users")}
                 style={{
                   background: "#481872",
@@ -830,6 +834,7 @@ function GenerateReports() {
               {/* Dropdown menu */}
               {openDropdown === "users" && (
                 <div
+                  id="dropdownUserCategories"
                   className="dropdown-menu"
                   style={{
                     position: "absolute",
@@ -849,6 +854,7 @@ function GenerateReports() {
                 >
                   {allColumns.map((col, index) => (
                     <div
+                      id={`dropdownItem-${col.key}`}
                       key={col.key}
                       className="dropdown-item"
                       onClick={() => toggleColumn(col.key)}
@@ -889,6 +895,7 @@ function GenerateReports() {
             }}
           >
             <table
+              id="tableUserReport"
               border="1"
               cellPadding="8"
               cellSpacing="0"

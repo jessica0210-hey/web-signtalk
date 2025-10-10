@@ -371,8 +371,9 @@ function LoginWrapper() {
   };
 
   return (
-    <div style={bgStyle}>
+    <div id="forgotpass-page-wrapper" style={bgStyle}>
       <img 
+        id="signtalk-logo"
         src={logo} 
         alt="SignTalk Logo" 
         className="logo" 
@@ -387,13 +388,13 @@ function LoginWrapper() {
           e.target.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))';
         }}
       />
-      <h1 style={titleStyle}>FORGOT PASSWORD</h1>
+      <h1 id="forgotpass-title" style={titleStyle}>FORGOT PASSWORD</h1>
       
-      <form onSubmit={handleSubmit} style={formStyle}>
+      <form id="forgotpass-form" onSubmit={handleSubmit} style={formStyle}>
         <div>
           <label htmlFor="email" style={labelStyle}>Email Address</label>
           <input
-            id="email"
+            id="forgotpass-email-input"
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
@@ -414,6 +415,7 @@ function LoginWrapper() {
         </div>
         
         <button 
+          id="forgotpass-submit-btn"
           type="submit" 
           style={submitButtonStyle}
           disabled={loading}
@@ -435,9 +437,9 @@ function LoginWrapper() {
       </form>
 
       {showPopup && (
-        <div style={popupNotifStyle}>
-          <div style={popupStyle}>
-            <div style={popupHeaderStyle}>
+        <div id="forgotpass-popup-overlay" style={popupNotifStyle}>
+          <div id="forgotpass-popup-container" style={popupStyle}>
+            <div id="forgotpass-popup-header" style={popupHeaderStyle}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '20px' }}>
                   {popupType === 'error' ? '❌' : '✅'}
@@ -447,12 +449,13 @@ function LoginWrapper() {
             </div>
             <div style={popupBodyStyle}>
               <div style={{ marginBottom: '24px' }}>
-                <p style={{ margin: '0', fontWeight: '500', fontSize: '14px', lineHeight: '1.5' }}>
+                <p id="forgotpass-popup-message" style={{ margin: '0', fontWeight: '500', fontSize: '14px', lineHeight: '1.5' }}>
                   {popupMessage}
                 </p>
               </div>
               <div style={okBtnContainerStyle}>
                 <button 
+                  id="forgotpass-ok-btn"
                   style={okBtnStyle} 
                   onClick={handleOkClick}
                   onMouseEnter={(e) => {
@@ -484,7 +487,7 @@ function LoginWrapper() {
               100% { transform: rotate(360deg); }
             }
           `}</style>
-          <div style={{
+          <div id="forgotpass-loading-spinner" style={{
             position: 'fixed',
             top: 0,
             left: 0,

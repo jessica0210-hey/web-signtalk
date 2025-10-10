@@ -313,10 +313,10 @@ function Feedback() {
           }
         `}
       </style>
-      <div style={styles.wrapper}>
+      <div id="feedback-page-wrapper" style={styles.wrapper}>
         <div style={styles.panel}>
           {/* Header */}
-          <div style={styles.headerTitle}>
+          <div id="feedback-header" style={styles.headerTitle}>
             <span style={styles.colHeader}></span>
             <span style={{ ...styles.colHeader, marginLeft: '100px' }}>DATE/TIME</span>
             <span style={{ ...styles.colHeader, marginLeft: '150px' }}>USER ID</span>
@@ -324,6 +324,7 @@ function Feedback() {
             <div style={styles.iconGroup}>
               <div style={{ position: 'relative' }}>
                 <img
+                  id="filter-icon"
                   src={filterIcon}
                   alt="filter"
                   className="icon"
@@ -334,6 +335,7 @@ function Feedback() {
                   }}
                 />
                 <input
+                  id="date-filter-input"
                   ref={dateInputRef}
                   type="date"
                   value={selectedDate}
@@ -350,6 +352,7 @@ function Feedback() {
                 />
               </div>
               <img 
+                id="generate-report-icon"
                 src={generateIcon} 
                 alt="generate" 
                 className="icon" 
@@ -360,29 +363,29 @@ function Feedback() {
           </div>
 
           {/* Body */}
-          <div style={styles.scrollArea}>
+          <div id="feedback-scroll-area" style={styles.scrollArea}>
             {loading ? (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#777' }}>
+              <div id="feedback-loading" style={{ padding: '60px', textAlign: 'center', color: '#777' }}>
                 Loading feedback...
               </div>
             ) : filteredData.length > 0 ? (
               filteredData.map((item, index) => (
-                <div key={item.id || index} style={styles.feedbackRow}>
-                  <div style={{ ...styles.col, ...styles.colIndex }}>{index + 1}</div>
-                  <div style={{ ...styles.col, ...styles.colDate }}>
+                <div id={`feedback-row-${index}`} key={item.id || index} style={styles.feedbackRow}>
+                  <div id={`feedback-index-${index}`} style={{ ...styles.col, ...styles.colIndex }}>{index + 1}</div>
+                  <div id={`feedback-date-${index}`} style={{ ...styles.col, ...styles.colDate }}>
                     <div>
                       <div style={{ fontWeight: 'bold' }}>{item.date.split('\n')[0]}</div>
                       <div>{item.date.split('\n')[1]}</div>
                     </div>
                   </div>
-                  <div style={{ ...styles.col, ...styles.colUser }}>
+                  <div id={`feedback-user-${index}`} style={{ ...styles.col, ...styles.colUser }}>
                     {item.userId || 'N/A'}
                   </div>
-                  <div style={{ ...styles.col, ...styles.colMessage }}>{item.message}</div>
+                  <div id={`feedback-message-${index}`} style={{ ...styles.col, ...styles.colMessage }}>{item.message}</div>
                 </div>
               ))
             ) : (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#777' }}>
+              <div id="no-feedback-message" style={{ padding: '60px', textAlign: 'center', color: '#777' }}>
                 No feedback found for this date
               </div>
             )}

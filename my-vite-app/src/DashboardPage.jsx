@@ -643,7 +643,7 @@ function DashboardPage() {
         {/* Second row: Numbers */}
         <div style={rowStyle}>
           <div style={colStyle}>
-            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+            <p id="totalUsersCount" style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
                onClick={() => handleUserNumberClick('total')}
                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
@@ -651,7 +651,7 @@ function DashboardPage() {
             </p>
           </div>
           <div style={colStyle}>
-            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+            <p id="hearingUsersCount" style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
                onClick={() => handleUserNumberClick('hearing')}
                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
@@ -659,7 +659,7 @@ function DashboardPage() {
             </p>
           </div>
           <div style={colStyle}>
-            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+            <p id="nonHearingUsersCount" style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
                onClick={() => handleUserNumberClick('nonhearing')}
                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
@@ -667,7 +667,7 @@ function DashboardPage() {
             </p>
           </div>
           <div style={colStyle}>
-            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+            <p id="inactiveUsersCount" style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
                onClick={() => handleUserNumberClick('inactive')}
                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
@@ -675,7 +675,7 @@ function DashboardPage() {
             </p>
           </div>
           <div style={colEndStyle}>
-            <p style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
+            <p id="activeUsersCount" style={{...numberStyle, cursor: 'pointer', transition: 'transform 0.2s'}} 
                onClick={() => handleUserNumberClick('active')}
                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}>
@@ -689,7 +689,7 @@ function DashboardPage() {
       <div style={lowerSectionStyle}>
         {/* 2x2 grid for dashboard buttons */}
         <div style={dashboardGridStyle}>
-          <div 
+          <div id="btnReports"
             style={dashboardBtnStyle} 
             onClick={() => navigate('/generatereport')}
             onMouseEnter={(e) => {
@@ -706,7 +706,7 @@ function DashboardPage() {
             <img src={reportIcon} alt="Reports" style={btnIconStyle} />
             <p style={btnTextStyle}>REPORTS</p>
           </div>
-          <div 
+          <div id="btnUsers"
             style={dashboardBtnStyle} 
             onClick={() => navigate('/userManagement')}
             onMouseEnter={(e) => {
@@ -723,7 +723,7 @@ function DashboardPage() {
             <img src={usersIcon} alt="Users" style={btnIconStyle} />
             <p style={btnTextStyle}>USERS</p>
           </div>
-          <div 
+          <div id="btnDatasets"
             style={dashboardBtnStyle} 
             onClick={() => navigate('/datasets')}
             onMouseEnter={(e) => {
@@ -740,7 +740,7 @@ function DashboardPage() {
             <img src={datasetIcon} alt="Data Sets" style={btnIconStyle} />
             <p style={btnTextStyle}>DATASETS</p>
           </div>
-          <div 
+          <div id="btnFeedback"
             style={dashboardBtnStyle} 
             onClick={() => navigate('/feedback')}
             onMouseEnter={(e) => {
@@ -773,7 +773,7 @@ function DashboardPage() {
             </p>
           )}
           <div style={{ textAlign: 'center' }}>
-            <div 
+            <div id="systemStatusToggleBtn"
               style={activeBtnStyle} 
               onClick={handleActiveClick}
               onMouseEnter={(e) => {
@@ -900,7 +900,7 @@ function DashboardPage() {
                 width: '80%',
                 margin: '0 auto 10px auto'
               }}>
-                <input
+                <input id="adminPasswordInput"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => {
@@ -930,7 +930,7 @@ function DashboardPage() {
                     e.target.style.boxShadow = 'none';
                   }}
                 />
-                <button
+                <button 
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   style={{
@@ -991,7 +991,7 @@ function DashboardPage() {
               )}
 
               <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                <button 
+                <button id="cancelPasswordBtn"
                   type="button" 
                   onClick={handleCancel} 
                   style={{ 
@@ -1024,6 +1024,7 @@ function DashboardPage() {
                   Cancel
                 </button>
                 <button 
+                  id="confirmPasswordBtn"
                   type="submit"
                   style={{ 
                     border: 'none',

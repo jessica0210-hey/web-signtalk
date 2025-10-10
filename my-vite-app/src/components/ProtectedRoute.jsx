@@ -123,7 +123,9 @@ function ProtectedRoute({ children }) {
   // Show loading spinner while checking authentication
   if (loading) {
     return (
-      <div style={{
+      <div 
+        id="auth-loading-container" 
+        style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -131,7 +133,9 @@ function ProtectedRoute({ children }) {
         backgroundColor: '#f5f5f5',
         flexDirection: 'column'
       }}>
-        <div style={{
+        <div 
+          id="auth-loading-spinner"
+          style={{
           width: '50px',
           height: '50px',
           border: '5px solid #e0e0e0',
@@ -139,7 +143,8 @@ function ProtectedRoute({ children }) {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }}></div>
-        <p style={{
+        <p id="auth-loading-text" 
+          style={{
           marginTop: '20px',
           color: '#666',
           fontSize: '16px'

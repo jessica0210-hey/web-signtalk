@@ -747,9 +747,9 @@ function LoginWrapper() {
   };
 
   return (
-    <div style={{...bgStyle, ...containerStyle}}>
+    <div id="loginContainer" style={{...bgStyle, ...containerStyle}}>
       <style>{spinnerKeyframes}</style>
-      <img 
+      <img id="signtalk-logo"
         src={logo} 
         alt="SignTalk Logo" 
         style={logoStyle}
@@ -762,12 +762,12 @@ function LoginWrapper() {
           e.target.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.3))';
         }}
       />
-      <h1 style={titleStyle}>ADMIN</h1>
+      <h1 id="loginTitle" style={titleStyle}>ADMIN</h1>
       
-      <form onSubmit={handleSubmit} style={formStyle}>
+      <form id="loginForm" onSubmit={handleSubmit} style={formStyle}>
           <div>
             <label style={labelStyle}>Username or Email</label>
-            <input
+            <input id="loginEmail"
               type="text"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -790,7 +790,7 @@ function LoginWrapper() {
           <div>
             <label style={labelStyle}>Password</label>
             <div style={passwordContainerStyle}>
-              <input
+              <input id="loginPassword"
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -808,7 +808,7 @@ function LoginWrapper() {
                   e.target.style.transform = 'scale(1)';
                 }}
               />
-              <button
+              <button id="togglePasswordVisibility"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={eyeButtonStyle}
@@ -833,7 +833,7 @@ function LoginWrapper() {
                 )}
               </button>
             </div>
-            <span
+            <span id="forgotPasswordLink"
               style={forgotLinkStyle}
               onClick={handleForgotClick}
               onMouseEnter={(e) => {
@@ -850,12 +850,12 @@ function LoginWrapper() {
           </div>
           
           {errorMsg && (
-            <div style={errorStyle}>
+            <div id="loginError" style={errorStyle}>
               {errorMsg}
             </div>
           )}
           
-          <button 
+          <button id="loginButton"
             type="submit" 
             disabled={loading}
             style={submitButtonStyle}
@@ -910,7 +910,7 @@ function LoginWrapper() {
                 gap: '16px',
                 marginTop: '20px'
               }}>
-                <button 
+                <button id="cancelForgotBtn"
                   onClick={cancelForgot} 
                   style={cancelBtnStyle}
                   onMouseEnter={(e) => {
@@ -926,7 +926,7 @@ function LoginWrapper() {
                 >
                   Cancel
                 </button>
-                <button 
+                <button id="confirmForgotBtn"
                   onClick={confirmForgot} 
                   style={confirmBtnStyle}
                   onMouseEnter={(e) => {
@@ -981,7 +981,7 @@ function LoginWrapper() {
                 gap: '16px',
                 marginTop: '20px'
               }}>
-                <button 
+                <button id="closeUnverifiedBtn"
                   onClick={closeUnverifiedPopup} 
                   style={confirmBtnStyle}
                   onMouseEnter={(e) => {
