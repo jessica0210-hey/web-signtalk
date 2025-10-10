@@ -613,12 +613,11 @@ function AdminLayout({ children, title }) {
       </>
     )}
 
-<<<<<<< HEAD
       {/* API Input Modal */}
       {showApiInput && (
         <>
           {/* Backdrop */}
-          <div id="apiModalBackdrop"
+          <div
             style={{
               position: 'fixed',
               top: 0,
@@ -719,7 +718,6 @@ function AdminLayout({ children, title }) {
           </div>
         </>
       )}
-=======
        {/* API Input Modal */}
         {showApiInput && (<>
         {/* Backdrop */}
@@ -792,8 +790,6 @@ function AdminLayout({ children, title }) {
     </div>
   </>
 )}
->>>>>>> c7d02ad (Initial Commit)
-
       {/* Content */}
       <main style={contentStyle}>{children}</main>
 

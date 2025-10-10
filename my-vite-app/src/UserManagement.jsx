@@ -899,8 +899,7 @@ function UserManagement() {
           </div>
 
           <div style={styles.rightControls}>
-            <div id="add-admin-wrapper">
-             style={styles.searchBox}>
+            <div id="add-admin-wrapper" style={styles.searchBox}>
               <input id="user-search-input"
                 type="text"
                 placeholder="Search..."
