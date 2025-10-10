@@ -606,76 +606,111 @@ function AdminLayout({ children, title }) {
       </>
     )}
 
-       {/* API Input Modal */}
-        {showApiInput && (<>
-        {/* Backdrop */}
-          <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1999
-        }}
-          onClick={() => {
-          setShowApiInput(false);
-        }}/>  
-        {/* Modal Content */}
-          <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-          zIndex: 2000,
-          minWidth: '600px'
-        }}>
-          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Enter Base URL</h3>
-          <input
-          type="text"
-          placeholder="Enter URL"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          style={{
-          width: '100%',
-          padding: '8px',
-          borderRadius: '4px',
-          border: '1px solid #ccc',
-          fontSize: '14px',
-          outline: 'none',
-          boxSizing: 'border-box',
-          marginBottom: '12px'
-        }}
-          onFocus={(e) => e.target.style.borderColor = '#75408eff'}
-          onBlur={(e) => e.target.style.borderColor = '#ccc'}
-        />
-          <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-          onClick={handleSaveApiKey}
-          style={{
-          flex: 1,
-          padding: '10px',
-          backgroundColor: '#d849e8ff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#e17ac7ff'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#d849e8ff'}
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </>
-)}
+      {/* API Input Modal */}
+      {showApiInput && (
+        <>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 1999,
+              animation: 'fadeIn 0.3s ease-out',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+            onClick={() => setShowApiInput(false)}
+          >
+            {/* Modal Content */}
+            <div
+              style={{
+                backgroundColor: 'white',
+                padding: '40px',
+                borderRadius: '15px',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+                zIndex: 2000,
+                minWidth: '560px',
+                maxWidth: '600px',
+                animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+            <h3
+              style={{
+                marginTop: 0,
+                marginBottom: '24px',
+                color: '#333',
+                fontSize: '24px',
+                fontWeight: '600',
+                textAlign: 'left'
+              }}
+            >
+              Enter Base URL
+            </h3>
+            
+            <input
+              type="text"
+              placeholder="https"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '10px',
+                border: '1px solid #e0e0e0',
+                fontSize: '16px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                marginBottom: '24px',
+                fontFamily: 'inherit'
+              }}
+              onFocus={(e) => (e.target.style.borderColor = '#d849e8ff')}
+              onBlur={(e) => (e.target.style.borderColor = '#e0e0e0')}
+            />
+            
+            <button
+              onClick={handleSaveApiKey}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: 'linear-gradient(90deg, #ff8ad6 0%, #d849e8 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.filter = 'brightness(1.1)';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(216, 73, 232, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.filter = 'brightness(1)';
+                e.target.style.transform = 'translateY(0px)';
+                e.target.style.boxShadow = 'none';
+              }}
+              onMouseDown={(e) => {
+                e.target.style.animation = 'modalButtonPulse 0.2s ease';
+              }}
+              onAnimationEnd={(e) => {
+                e.target.style.animation = '';
+              }}
+            >
+              SAVE
+            </button>
+          </div>
+          </div>
+        </>
+      )}
 
       {/* Content */}
       <main style={contentStyle}>{children}</main>
