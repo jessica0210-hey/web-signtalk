@@ -654,7 +654,7 @@ function Datasets() {
                 outline: 'none',
                 transition: 'border-color 0.3s'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#007bff'}
+              onFocus={(e) => e.target.style.borderColor = '#481872'}
               onBlur={(e) => e.target.style.borderColor = '#ddd'}
               autoFocus
             />
@@ -690,8 +690,8 @@ function Datasets() {
                 onClick={confirmRename}
                 style={{
                   padding: '10px 20px',
-                  border: '2px solid #007bff',
-                  backgroundColor: isRenaming ? '#6c757d' : '#007bff',
+                  border: '2px solid #481872',
+                  backgroundColor: isRenaming ? '#6c757d' : '#481872',
                   color: 'white',
                   borderRadius: '6px',
                   cursor: isRenaming ? 'not-allowed' : 'pointer',
@@ -701,8 +701,8 @@ function Datasets() {
                   alignItems: 'center',
                   gap: '8px'
                 }}
-                onMouseEnter={(e) => !isRenaming && (e.target.style.backgroundColor = '#0056b3')}
-                onMouseLeave={(e) => !isRenaming && (e.target.style.backgroundColor = '#007bff')}
+                onMouseEnter={(e) => !isRenaming && (e.target.style.backgroundColor = '#481872')}
+                onMouseLeave={(e) => !isRenaming && (e.target.style.backgroundColor = '#481872e8')}
                 disabled={!newKeyword.trim() || isRenaming}
               >
                 {isRenaming ? (
@@ -788,7 +788,7 @@ function Datasets() {
                 </p>
               </div>
             </div>
-            <p style={{ color: '#555', marginBottom: '25px', lineHeight: '1.5', fontSize: '20px' }}>
+            <p style={{ color: '#555', marginBottom: '25px', lineHeight: '1.5', fontSize: '18px', textAlign: 'center' }}>
               Are you sure you want to delete the dataset "<strong>{selectedItem?.keyword}</strong>"? 
               This will permanently remove all associated data and cannot be recovered.
             </p>
@@ -834,7 +834,7 @@ function Datasets() {
                   alignItems: 'center',
                   gap: '8px'
                 }}
-                onMouseEnter={(e) => !isDeleting && (e.target.style.backgroundColor = '#c82333')}
+                onMouseEnter={(e) => !isDeleting && (e.target.style.backgroundColor = '#aa535cff')}
                 onMouseLeave={(e) => !isDeleting && (e.target.style.backgroundColor = '#dc3545')}
                 disabled={isDeleting}
               >
@@ -1123,7 +1123,6 @@ const styles = {
     cursor: 'pointer',
     color: '#fff',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',   
-    border: '1px solid #fff',  
   },
   uploadContent: {
     display: 'flex',
@@ -1131,8 +1130,8 @@ const styles = {
     alignItems: 'center',
   },
   uploadIcon: {
-    width: '70px',
-    height: '70px',
+    width: '90px',
+    height: '90px',
     marginBottom: '15px',
     marginTop: '-20px',
     filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
@@ -1175,7 +1174,7 @@ const styles = {
 
   sectionTitle: {
     margin: 0,
-    color: '#6F22A3',
+    color: '#481872',
     fontSize: '24px',
     fontWeight: 'bold',
     padding:'20px'
@@ -1184,7 +1183,7 @@ const styles = {
   keywordInput: {
     display: "inline",
     padding: "10px",
-    marginTop: "10px",
+    marginTop: "30px",
     borderRadius: "5px",
     border: "1px solid #ccc",
     height: "50px",
@@ -1216,13 +1215,13 @@ const styles = {
 
   searchBox: {
     backgroundColor: 'rgba(255,255,255,0.3)',
-    border: '1px solid #ccc',
+    border: '2px solid #ccc',
     borderRadius: '20px',
     position: 'absolute',
     right: 20,
     padding: '0 15px',
     height: '40px',
-    width: '300px',
+    width: '350px',
     display: 'flex',
     alignItems: 'center',    
   },

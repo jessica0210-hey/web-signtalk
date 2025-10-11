@@ -399,8 +399,9 @@ const styles = {
   wrapper: {
     width: '100%',
     overflowX: 'auto',
-    border: '2px solid #ddd',
+    border: '4px solid #ddd',
     borderRadius: '10px',
+    boxShadow: '0 8px 20px rgba(29, 29, 29, 0.2)',
   },
   panel: {
     backgroundColor: 'white',
@@ -463,7 +464,7 @@ const styles = {
     textAlign: 'center',
   },
   colDate: {
-    fontSize: '18px', // Increased font size for timestamp
+    fontSize: '18px', 
     textAlign: 'center',
     display: 'flex',
     alignItems: 'center',
@@ -471,15 +472,15 @@ const styles = {
   },
   colUser: {
     textAlign: 'center',
-    fontSize: '18px', // Increased font size for uid
+    fontSize: '18px', 
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   colMessage: {
     borderRight: '0',
-    fontSize: '20px', // Increased font size
-    textAlign: 'center', // Center the message
+    fontSize: '20px', 
+    textAlign: 'center', 
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

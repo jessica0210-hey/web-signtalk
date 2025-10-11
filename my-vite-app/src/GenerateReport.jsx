@@ -908,11 +908,12 @@ function GenerateReports() {
               overflowY: "auto",
               maxWidth: "90vw",
               maxHeight: "76vh",
-              border: "1px solid #ddd",
+              borderRadius: "18px",
               marginLeft: "50px", 
               marginRight: "50px",
               display: "flex",
-              alignItems: "flex-start"
+              alignItems: "flex-start",
+              boxShadow: "0 8px 20px rgba(0, 0, 0, 0.2)",
             }}
           >
             <table
@@ -925,7 +926,7 @@ function GenerateReports() {
                 width: "100%",
                 maxWidth: "1600px",
                 borderCollapse: "separate",
-                borderColor: "#ddd",
+                border: ".5px solid #ddd",
                 borderSpacing: "0",
                 tableLayout: "fixed",
                 marginLeft: 0

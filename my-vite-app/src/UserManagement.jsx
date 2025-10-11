@@ -999,7 +999,7 @@ function UserManagement() {
                               e.target.style.backgroundColor = '#6F22A3';
                             }}
                           >
-                            Reset
+                            Reset Password
                           </button>
                           <button id={`delete-btn-${item.id || i}`}
                             style={{

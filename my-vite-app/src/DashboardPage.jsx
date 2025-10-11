@@ -399,7 +399,7 @@ function DashboardPage() {
 
   // --- styles ---
 
-  const headerStyle = { fontSize: '60px', margin: 0 , fontWeight: 700,color:'#631B8D'};
+  const headerStyle = { fontSize: '60px', margin: 0 , fontWeight: 700, color:'#631B8D', letterSpacing: '1.5px' };
   const statsContainerStyle = {
     width: '1800px',
     height: '190px',
@@ -413,11 +413,21 @@ function DashboardPage() {
     color: 'white',
     boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
   };
-  const rowStyle = { display: 'flex', justifyContent: 'space-between', textAlign: 'center' };
-  const colStyle = { flex: 1, textAlign: 'center', borderRight: '2px solid #631B8D' };
+
+  const rowStyle = { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    textAlign: 'center',
+  };
+
+  const colStyle = { 
+    flex: 1, 
+    textAlign: 'center', 
+    borderRight: '2px solid #631B8D ',
+  };
   const colEndStyle = { flex: 1, textAlign: 'center' };
   const labelStyle = { fontSize: '28px',color:'#631B8D' };
-  const numberStyle = { fontSize: '70px', margin: 0, color:'#631B8D'};
+  const numberStyle = { fontSize: '75px', margin: 0, color:'#631B8D'};
   const lowerSectionStyle = {
     marginTop: '20px',
     gap: '20px',
@@ -474,7 +484,7 @@ function DashboardPage() {
     boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
   };
 
-  const btnIconStyle = { width: '110px', height: '110px', marginRight: '50px' };
+  const btnIconStyle = { width: '110px', height: '110px', marginRight: '70px' };
   const btnTextStyle = { fontSize: '34px', margin: 0 , fontWeight: 700};
 
 
@@ -640,7 +650,7 @@ function DashboardPage() {
           <div style={colStyle}><p style={labelStyle}>Hearing Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Non-Hearing Users</p></div>
           <div style={colStyle}><p style={labelStyle}>Inactive (Offline) Users</p></div>
-          <div style={colEndStyle}><p style={labelStyle}>Active Users</p></div>
+          <div style={colEndStyle}><p style={labelStyle}>Active (Online) Users</p></div>
         </div>
 
         {/* Second row: Numbers */}
@@ -724,7 +734,7 @@ function DashboardPage() {
             }}
           >
             <img src={usersIcon} alt="Users" style={btnIconStyle} />
-            <p style={btnTextStyle}>USERS</p>
+            <p style={btnTextStyle}>MANAGE <br /> USERS</p>
           </div>
           <div id="btnDatasets"
             style={dashboardBtnStyle} 
