@@ -999,7 +999,7 @@ function UserManagement() {
                               e.target.style.backgroundColor = '#6F22A3';
                             }}
                           >
-                            Reset Password
+                            Reset
                           </button>
                           <button id={`delete-btn-${item.id || i}`}
                             style={{
@@ -1024,7 +1024,7 @@ function UserManagement() {
                               }
                             }}
                           >
-                            Delete Account
+                            Delete
                           </button>
                         </td>
                       </tr>
@@ -1673,7 +1673,7 @@ const styles = {
   tabsContainer: { 
     display: 'flex', 
     position: 'relative',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#481872',
     borderRadius: '12px',
     padding: '4px',
     gap: '0px'
@@ -1702,7 +1702,7 @@ const styles = {
     flex: 1,
     transition: 'color 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
   },
-  searchBox: { display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.28)', borderRadius: '25px', paddingLeft: '15px', paddingRight: '15px', width: '350px', height: '45px', color: '#fff' },
+  searchBox: { display: 'flex', alignItems: 'center', backgroundColor: '#481872', borderRadius: '25px', paddingLeft: '15px', paddingRight: '15px', width: '400px', height: '45px', color: '#fff' },
   searchIcon: { width: '20px', filter: 'brightness(0) invert(1)' },
   searchInput: { border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '16px', color: '#fff' },
   searchBtn: { background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', padding: 0, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
@@ -1735,7 +1735,7 @@ const styles = {
   formLabel: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#333', marginBottom: '8px' },
   formInput: { width: '100%', padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', color: '#333', outline: 'none', transition: 'all 0.3s ease', boxSizing: 'border-box', backgroundColor: '#f8f9fa', transform: 'scale(1)' },
   confirmResetBtn: { backgroundColor: '#6F22A3', color: '#fff', border: 'none', borderRadius: '8px', padding: '12px 30px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.3s ease', transform: 'translateY(0px)' },
-  rightControls: { display: 'flex', alignItems: 'center', gap: '15px' },
+  rightControls: { display: 'flex', alignItems: 'center'},
   // Add Admin Modal Styles
   addAdminModal: { backgroundColor: '#fff', borderRadius: '15px', padding: '40px', maxWidth: '450px', width: '90%', textAlign: 'center', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)', border: 'none', animation: 'popupSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: 'scale(1)' },
   addAdminIconStyle: { width: '70px', height: '70px', animation: 'iconBounce 0.6s ease-out 0.2s both' },

@@ -200,10 +200,8 @@ function AdminLayout({ children, title }) {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0 20px',
-    backgroundImage: `url(${headerImage})`,
-    backgroundSize: 'cover',
+    backgroundColor: '#481872',
     backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
     boxShadow: '0 4px 10px rgba(255, 255, 255, 0.3)',
     position: 'relative'
   };
@@ -596,7 +594,7 @@ function AdminLayout({ children, title }) {
             onClick={() => setShowAlert(false)}
             style={{
               padding: '10px 24px',
-              backgroundColor: '#7f49d1ff',
+              backgroundColor: '#481872',
               color: 'white',
               border: 'none',
               borderRadius: '6px',
@@ -604,8 +602,18 @@ function AdminLayout({ children, title }) {
               fontSize: '20px',
               fontWeight: '500'
             }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#7f49d1ff'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#5e2b8c'}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#481872';
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.transition = 'all 0.3s ease';
+              e.target.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = '#481872';
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.transition = 'all 0.3s ease';
+              e.target.style.boxShadow = '0 4px 12px rgba(255, 255, 255, 0.2)';
+            }}
           >
             OK
           </button>
@@ -686,19 +694,20 @@ function AdminLayout({ children, title }) {
               style={{
                 width: '100%',
                 padding: '16px',
-                background: 'linear-gradient(90deg, #ff8ad6 0%, #d849e8 100%)',
+                background: '#481872',
                 color: 'white',
+                letterSpacing: '1px',
                 border: 'none',
                 borderRadius: '10px',
                 cursor: 'pointer',
-                fontSize: '16px',
+                fontSize: '18px',
                 fontWeight: '600',
                 transition: 'all 0.3s ease'
               }}
               onMouseEnter={(e) => {
                 e.target.style.filter = 'brightness(1.1)';
                 e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(216, 73, 232, 0.4)';
+                e.target.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.4)';
               }}
               onMouseLeave={(e) => {
                 e.target.style.filter = 'brightness(1)';

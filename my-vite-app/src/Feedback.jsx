@@ -138,7 +138,8 @@ function Feedback() {
           }
           .print-table { 
             width: 85%; 
-            border-collapse: collapse; 
+            border-collapse: collapse;
+            border: 2px solid #481872; 
             margin: 0 auto 30px auto;
             page-break-inside: avoid;
           }
@@ -398,6 +399,8 @@ const styles = {
   wrapper: {
     width: '100%',
     overflowX: 'auto',
+    border: '2px solid #ddd',
+    borderRadius: '10px',
   },
   panel: {
     backgroundColor: 'white',
@@ -446,11 +449,11 @@ const styles = {
   feedbackRow: {
     display: 'grid',
     gridTemplateColumns: '100px minmax(120px, 1fr) minmax(120px, 1fr) 2fr',
-    borderBottom: '1px solid #000000ff',
+    borderBottom: '2px solid #ddd',
   },
   col: {
     padding: '30px',
-    borderRight: '1px solid #000000ff',
+    borderRight: '2px solid #ddd',
     color: '#481872',
     fontSize: '14px',
     wordBreak: 'break-word',

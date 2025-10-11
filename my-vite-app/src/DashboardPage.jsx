@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
 import statsBg from './assets/statsBg.png'; 
 import dashboardBtn from './assets/dashboardBtn.png'; 
-import systemStatBg from './assets/SystemStatBg.png'; 
+import SystemStatBg2 from './assets/SystemStatBg2.png'; 
 import reportIcon from './assets/generateReportIcon.png'; 
 import datasetIcon from './assets/signlanguageIcon.png'; 
 import feedbackIcon from './assets/feedbackIcon.png';
@@ -11,6 +11,7 @@ import dialogImg from './assets/dialogImg.png';
 import inactiveBtn from './assets/inactiveBtn.png'; 
 import activeBtn from './assets/activeBtn.png'; 
 import usersIcon from './assets/usersIcon.png';
+import statusIcon from './assets/status-icon.png';
 import { firestore, auth } from './firebase';
 import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
 import { EmailAuthProvider, reauthenticateWithCredential, onAuthStateChanged } from "firebase/auth";
@@ -457,7 +458,7 @@ function DashboardPage() {
   const systemStatBgStyle = {
     width: '45%',
     height: '100%',
-    backgroundImage: `url(${systemStatBg})`,
+    backgroundImage: `url(${SystemStatBg2})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
@@ -471,23 +472,23 @@ function DashboardPage() {
     justifyContent: 'center'
   };
 
-  const btnIconStyle = { width: '110px', height: '120px', margin: '0' };
+  const btnIconStyle = { width: '110px', height: '110px', marginRight: '50px' };
   const btnTextStyle = { fontSize: '34px', margin: 0 , fontWeight: 700};
 
 
   const activeBtnStyle = isActive
     ? {
         backgroundImage:`url(${activeBtn})`, 
+        backgroundRepeat: 'no-repeat',
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
         fontWeight: 'bold',
         cursor: 'pointer',
         display: 'inline-block',
-        marginTop: '20px',
-        width: '400px',
+        marginTop: '10px',
+        width: '280px',
         height: '130px',
-        textAlign: 'center',
         fontSize: '32px',
         border: 'none',
         lineHeight: ' 86px',
@@ -497,6 +498,7 @@ function DashboardPage() {
       }
     : {
         background: `url(${inactiveBtn})`,
+        backgroundRepeat: 'no-repeat',
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
@@ -504,7 +506,7 @@ function DashboardPage() {
         cursor: 'pointer',
         display: 'inline-block',
         marginTop: '20px',
-        width: '400px',
+        width: '250px',
         height: '130px',
         textAlign: 'center',
         fontSize: '32px',
@@ -757,16 +759,26 @@ function DashboardPage() {
         </div>
         {/* System Status */}
         <div style={systemStatBgStyle}>
+          <div style={{ textAlign: 'center', marginTop: '100px' }}>
+            <img 
+              src={statusIcon} 
+              alt="Status Icon" 
+              style={{ 
+                width: '110px', 
+                height: '110px'
+              }}
+            />
+          </div>
           <p style={{ fontSize: '60px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' }}>SYSTEM STATUS</p>
           {isActive ? (
-            <p style={{ fontSize: '20px', textAlign: 'center', marginTop: '20px' }}>
+            <p style={{ fontSize: '15px', textAlign: 'center', color: '#ddd'}}>
               Activating maintenance mode will <br /> make the system
               unavailable to all users.
             </p>
           ) : (
-            <p style={{ fontSize: '18px', textAlign: 'center', marginTop: '30px' }}>
-              The system is currently in maintenance mode.<br />
-              All services are temporarily unavailable and will remain offline until the administrator reactivates the system.
+            <p style={{ fontSize: '15px', textAlign: 'center', color: '#ddd'}}>
+              The system is currently in maintenance mode.
+              All services are temporarily unavailable <br />and will remain offline until the administrator reactivates the system.
             </p>
           )}
           <div style={{ textAlign: 'center' }}>

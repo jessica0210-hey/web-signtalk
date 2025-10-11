@@ -1112,14 +1112,13 @@ function Datasets() {
 
 const styles = {
   uploadBox: {
-    backgroundImage: `url(${uploadBg})`,
-    backgroundSize: 'cover',
+    backgroundColor: '#481872',
     backgroundPosition: 'center',
     borderRadius: '12px',
     padding: '45px',
     textAlign: 'center',
     marginTop: '20px',
-    width: '800px',
+    width: '700px',
     height: '260px',
     cursor: 'pointer',
     color: '#fff',
@@ -1150,7 +1149,9 @@ const styles = {
     opacity: 0.8,
   },
   gifContainer: {
-    background: '#fff',   
+    background: '#fff',
+    border: '1px solid #ddd',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
     borderRadius: '10px',
     padding: '20px',
     margin: '10px auto',

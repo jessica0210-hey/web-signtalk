@@ -37,14 +37,12 @@ const dropdownAnimations = `
     animation: dropdownSlideDown 0.2s ease-out forwards;
   }
 
-  .dropdown-item {
-    transition: all 0.15s ease;
+  .dropdown-item[style] {
+    transition: all 0.15s ease !important;
   }
 
-  .dropdown-item:hover {
-    background-color: #f8f9fa !important;
-    box-shadow: inset 2px 0 0 #6f22a3;
-  }
+
+
 `;
 
 // Inject animations into document
@@ -400,6 +398,7 @@ function GenerateReports() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [hoveredItem, setHoveredItem] = useState(null);
 
   const tableContainerRef = useRef(null);
 
@@ -485,7 +484,7 @@ function GenerateReports() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginLeft: '10px' }}>
             <span className="print-header">LIST OF USERS</span>
             {selectedCols.length === 0 && (
-                  <div style={{ display: "flex", alignItems: "center", opacity: 1, visibility: "visible" }}>
+                  <div style={{ padding: "0", display: "flex", alignItems: "center", opacity: 1, visibility: "visible" }}>
                 <button
                   onClick={() => setOpenDropdown(openDropdown === "users" ? null : "users")}
                   style={{
@@ -543,15 +542,22 @@ function GenerateReports() {
               {allColumns.map((col) => (
                 <div
                   key={col.key}
-                  className="dropdown-item"
+                  className={`dropdown-item ${selectedCols.includes(col.key) ? 'selected' : ''}`}
                   onClick={() => toggleColumn(col.key)}
+                  onMouseEnter={() => setHoveredItem(col.key)}
+                  onMouseLeave={() => setHoveredItem(null)}
                   style={{
                     padding: "12px 16px",
                     cursor: "pointer",
-                    background: selectedCols.includes(col.key) ? "#b77df1ff" : "white",
+                    background: 
+                      hoveredItem === col.key 
+                        ? (selectedCols.includes(col.key) ? "#a66de0" : "#e8d5f7")
+                        : (selectedCols.includes(col.key) ? "#b77df1ff" : "white"),
                     fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
-                    color: "#000",
-                    borderRadius: selectedCols.includes(col.key) ? "4px" : "0"
+                    color: selectedCols.includes(col.key) ? "#fff" : "#000",
+                    borderRadius: selectedCols.includes(col.key) ? "4px" : "0",
+                    transform: hoveredItem === col.key ? "translateX(2px)" : "translateX(0)",
+                    transition: "all 0.15s ease"
                   }}
                 >
                   {col.label}
@@ -642,19 +648,26 @@ function GenerateReports() {
                 {allColumns.map((dropdownCol, index) => (
                   <div
                     key={dropdownCol.key}
-                    className="dropdown-item"
+                    className={`dropdown-item ${selectedCols.includes(dropdownCol.key) ? 'selected' : ''}`}
                     onClick={() => toggleColumn(dropdownCol.key)}
+                    onMouseEnter={() => setHoveredItem(dropdownCol.key)}
+                    onMouseLeave={() => setHoveredItem(null)}
                     style={{
                       padding: "12px 16px",
                       cursor: "pointer",
-                      background: selectedCols.includes(dropdownCol.key) ? "#b77df1ff" : "white",
+                      background: 
+                        hoveredItem === dropdownCol.key 
+                          ? (selectedCols.includes(dropdownCol.key) ? "#a66de0" : "#e8d5f7")
+                          : (selectedCols.includes(dropdownCol.key) ? "#b77df1ff" : "white"),
                       fontWeight: selectedCols.includes(dropdownCol.key) ? "bold" : "normal",
-                      color: "#000",
+                      color: selectedCols.includes(dropdownCol.key) ? "#fff" : "#000",
                       borderBottom: index === allColumns.length - 1 ? "none" : "1px solid #eee",
                       borderRadius: 
                         index === 0 && index === allColumns.length - 1 ? "8px" :
                         index === 0 ? "8px 8px 0 0" :
-                        index === allColumns.length - 1 ? "0 0 8px 8px" : "0"
+                        index === allColumns.length - 1 ? "0 0 8px 8px" : "0",
+                      transform: hoveredItem === dropdownCol.key ? "translateX(2px)" : "translateX(0)",
+                      transition: "all 0.15s ease"
                     }}
                   >
                     {dropdownCol.label}
@@ -791,8 +804,8 @@ function GenerateReports() {
             justifyContent: "center",
             height: "60vh",
             textAlign: "center",
-            color: "#fff",
-            fontSize: "18px"
+            color: "#481872",
+            fontSize: "20px"
           }}>
             <div style={{ marginBottom: "10px" }}>
               Please select one or more user categories from the dropdown menu to generate a report.
@@ -857,19 +870,26 @@ function GenerateReports() {
                     <div
                       id={`dropdownItem-${col.key}`}
                       key={col.key}
-                      className="dropdown-item"
+                      className={`dropdown-item ${selectedCols.includes(col.key) ? 'selected' : ''}`}
                       onClick={() => toggleColumn(col.key)}
+                      onMouseEnter={() => setHoveredItem(col.key)}
+                      onMouseLeave={() => setHoveredItem(null)}
                       style={{
                         padding: "12px 16px",
                         cursor: "pointer",
-                        background: selectedCols.includes(col.key) ? "#b77df1ff" : "white",
+                        background: 
+                          hoveredItem === col.key 
+                            ? (selectedCols.includes(col.key) ? "#a66de0" : "#e8d5f7")
+                            : (selectedCols.includes(col.key) ? "#b77df1ff" : "white"),
                         fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
-                        color: "#000",
+                        color: selectedCols.includes(col.key) ? "#fff" : "#000",
                         borderBottom: index === allColumns.length - 1 ? "none" : "1px solid #eee",
                         borderRadius: 
                           index === 0 && index === allColumns.length - 1 ? "8px" :
                           index === 0 ? "8px 8px 0 0" :
-                          index === allColumns.length - 1 ? "0 0 8px 8px" : "0"
+                          index === allColumns.length - 1 ? "0 0 8px 8px" : "0",
+                        transform: hoveredItem === col.key ? "translateX(2px)" : "translateX(0)",
+                        transition: "all 0.15s ease"
                       }}
                     >
                       {col.label}
@@ -888,7 +908,7 @@ function GenerateReports() {
               overflowY: "auto",
               maxWidth: "90vw",
               maxHeight: "76vh",
-              border: "1px solid #ccc",
+              border: "1px solid #ddd",
               marginLeft: "50px", 
               marginRight: "50px",
               display: "flex",
@@ -905,12 +925,13 @@ function GenerateReports() {
                 width: "100%",
                 maxWidth: "1600px",
                 borderCollapse: "separate",
+                borderColor: "#ddd",
                 borderSpacing: "0",
                 tableLayout: "fixed",
                 marginLeft: 0
               }}
             >
-              <thead>{renderHeaders()}</thead>
+              <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>{renderHeaders()}</thead>
               <tbody>{renderBody()}</tbody>
             </table>
           </div>
