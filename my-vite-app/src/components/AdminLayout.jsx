@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import bgImage from '../assets/background2.png';
+import bgImage from '../assets/dashb.png';
 import headerImage from '../assets/headerImage.png';
 import logo from '../assets/signtalk_logo.png';
 import profileBtn from '../assets/profile.png'; 

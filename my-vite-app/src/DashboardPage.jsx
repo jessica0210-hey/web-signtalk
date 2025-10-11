@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
-import statsBg from './assets/statsBg.png'; 
+import statsbg from './assets/statsBackground.png'; 
 import dashboardBtn from './assets/dashboardBtn.png'; 
-import SystemStatBg2 from './assets/SystemStatBg2.png'; 
+import SystemStatBg2 from './assets/SystemStatBg.png'; 
 import reportIcon from './assets/generateReportIcon.png'; 
 import datasetIcon from './assets/signlanguageIcon.png'; 
 import feedbackIcon from './assets/feedbackIcon.png';
@@ -399,19 +399,22 @@ function DashboardPage() {
 
   // --- styles ---
 
-  const headerStyle = { fontSize: '32px', margin: 0 , fontWeight: 700,color:'#631B8D'};
+  const headerStyle = { fontSize: '60px', margin: 0 , fontWeight: 700,color:'#631B8D'};
   const statsContainerStyle = {
     width: '1800px',
-    height: '170px',
+    height: '190px',
     marginTop: '20px',
     borderRadius: '18px',
     overflow: 'hidden',
-
+    backgroundImage: `url(${statsbg})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center', 
     padding: '30px',
     color: 'white',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
   };
   const rowStyle = { display: 'flex', justifyContent: 'space-between', textAlign: 'center' };
-  const colStyle = { flex: 1, textAlign: 'center', borderRight: '3px solid #631B8D' };
+  const colStyle = { flex: 1, textAlign: 'center', borderRight: '2px solid #631B8D' };
   const colEndStyle = { flex: 1, textAlign: 'center' };
   const labelStyle = { fontSize: '28px',color:'#631B8D' };
   const numberStyle = { fontSize: '70px', margin: 0, color:'#631B8D'};
@@ -435,12 +438,12 @@ function DashboardPage() {
   };
 
   const dashboardBtnStyle = {
-    backgroundColor: '#6D2593',
+    backgroundColor: '#fff',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
     padding: '20px',
-    color: 'white',
+    color: '#481872',
     textAlign: 'center',
     cursor: 'pointer',
     display: 'flex',
@@ -448,11 +451,11 @@ function DashboardPage() {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '40px',
-    border: '1px solid white',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
     width: '100%',      
     height: '180px',
     transition: 'all 0.3s ease',
-    transform: 'translateY(0px) scale(1)'
+    transform: 'translateY(0px) scale(1)',
   };
 
   const systemStatBgStyle = {
@@ -465,11 +468,10 @@ function DashboardPage() {
     padding: '20px',
     color: 'white',
     position: 'relative',
-    border: '1px solid white',
-    boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.15)',
   };
 
   const btnIconStyle = { width: '110px', height: '110px', marginRight: '50px' };
@@ -480,6 +482,7 @@ function DashboardPage() {
     ? {
         backgroundImage:`url(${activeBtn})`, 
         backgroundRepeat: 'no-repeat',
+        backgroundSize: 'contain',
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
@@ -499,6 +502,7 @@ function DashboardPage() {
     : {
         background: `url(${inactiveBtn})`,
         backgroundRepeat: 'no-repeat',
+        backgroundSize: 'cover',
         color: 'white',
         padding: '12px 30px',
         borderRadius: '25px',
@@ -628,7 +632,7 @@ function DashboardPage() {
           <div style={spinnerStyle}></div>
         </div>
       )}
-      <p style={headerStyle}>NUMBER OF USERS</p>
+      <p style={headerStyle}>USER STATISTICS</p>
       <div style={statsContainerStyle}>
         {/* First row: Labels */}
         <div style={rowStyle}>
@@ -693,12 +697,12 @@ function DashboardPage() {
             onClick={() => navigate('/generatereport')}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
           >
@@ -710,12 +714,12 @@ function DashboardPage() {
             onClick={() => navigate('/userManagement')}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
           >
@@ -727,12 +731,12 @@ function DashboardPage() {
             onClick={() => navigate('/datasets')}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
           >
@@ -744,12 +748,12 @@ function DashboardPage() {
             onClick={() => navigate('/feedback')}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
-              e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
               e.currentTarget.style.transition = 'all 0.3s ease';
             }}
           >
@@ -759,17 +763,19 @@ function DashboardPage() {
         </div>
         {/* System Status */}
         <div style={systemStatBgStyle}>
-          <div style={{ textAlign: 'center', marginTop: '100px' }}>
+          <p style={{ fontSize: '60px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' , marginTop: '20px'}}>SYSTEM STATUS</p>
+          <div style={{ textAlign: 'center'}}>
             <img 
               src={statusIcon} 
               alt="Status Icon" 
               style={{ 
                 width: '110px', 
-                height: '110px'
+                height: '110px',
+                marginTop: '10px',
+                marginBottom: '10px',
               }}
             />
           </div>
-          <p style={{ fontSize: '60px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' }}>SYSTEM STATUS</p>
           {isActive ? (
             <p style={{ fontSize: '15px', textAlign: 'center', color: '#ddd'}}>
               Activating maintenance mode will <br /> make the system
@@ -782,9 +788,21 @@ function DashboardPage() {
             </p>
           )}
           <div style={{ textAlign: 'center' }}>
-            <div id="systemStatusToggleBtn"
-              style={activeBtnStyle} 
+            <img 
+              id="systemStatusToggleBtn"
+              src={isActive ? activeBtn : inactiveBtn}
+              alt={isActive ? "Active" : "Inactive"}
               onClick={handleActiveClick}
+              style={{
+                cursor: 'pointer',
+                marginTop: '10px',
+                width: 'auto',
+                height: '50px',
+                maxWidth: '100%',
+                objectFit: 'contain',
+                transition: 'all 0.3s ease',
+                transform: 'scale(1)',
+              }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)';
                 e.currentTarget.style.transition = 'all 0.3s ease';
@@ -792,13 +810,10 @@ function DashboardPage() {
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-                e.currentTarget.style.boxShadow = 'none';
                 e.currentTarget.style.transition = 'all 0.3s ease';
                 e.currentTarget.style.filter = 'brightness(1)';
               }}
-            >
-            
-            </div>
+            />
           </div>
         </div>
       </div>
