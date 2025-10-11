@@ -269,13 +269,13 @@ function AdminLayout({ children, title }) {
     height: '39px',
     cursor: 'pointer',
     position: 'absolute',
-    top: '32px', 
+    top: '34px', 
     right: -10,
     zIndex: 1000,
     borderRadius: '8px',
     animation: 'logoutButtonPopup 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
     transition: 'all 0.3s ease',
-    transform: 'scale(1)'
+    transform: 'scale(1)',
   };
 
   const confirmLogoutBtnStyle = {
@@ -718,78 +718,7 @@ function AdminLayout({ children, title }) {
           </div>
         </>
       )}
-       {/* API Input Modal */}
-        {showApiInput && (<>
-        {/* Backdrop */}
-          <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1999
-        }}
-          onClick={() => {
-          setShowApiInput(false);
-        }}/>  
-        {/* Modal Content */}
-          <div id="apiModal" style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-          zIndex: 2000,
-          minWidth: '600px'
-        }}>
-          <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Enter Base URL</h3>
-          <input
-          id="apiUrlInput" 
-          type="text"
-          placeholder="Enter URL"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          style={{
-          width: '100%',
-          padding: '8px',
-          borderRadius: '4px',
-          border: '1px solid #ccc',
-          fontSize: '14px',
-          outline: 'none',
-          boxSizing: 'border-box',
-          marginBottom: '12px'
-        }}
-          onFocus={(e) => e.target.style.borderColor = '#75408eff'}
-          onBlur={(e) => e.target.style.borderColor = '#ccc'}
-        />
-          <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-          id="saveApiButton"
-          onClick={handleSaveApiKey}
-          style={{
-          flex: 1,
-          padding: '10px',
-          backgroundColor: '#d849e8ff',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: '500'
-        }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#e17ac7ff'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#d849e8ff'}
-        >
-          Save
-        </button>
-      </div>
-    </div>
-  </>
-)}
+       
       {/* Content */}
       <main style={contentStyle}>{children}</main>
 
