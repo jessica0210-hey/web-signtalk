@@ -398,25 +398,22 @@ function DashboardPage() {
 
   // --- styles ---
 
-  const headerStyle = { fontSize: '32px', margin: 0 , fontWeight: 700};
+  const headerStyle = { fontSize: '32px', margin: 0 , fontWeight: 700,color:'#631B8D'};
   const statsContainerStyle = {
     width: '1800px',
     height: '170px',
     marginTop: '20px',
     borderRadius: '18px',
     overflow: 'hidden',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
-    backgroundImage: `url(${statsBg})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+
     padding: '30px',
     color: 'white',
   };
   const rowStyle = { display: 'flex', justifyContent: 'space-between', textAlign: 'center' };
-  const colStyle = { flex: 1, textAlign: 'center', borderRight: '2px solid rgba(255, 255, 255, 0.5)' };
+  const colStyle = { flex: 1, textAlign: 'center', borderRight: '3px solid #631B8D' };
   const colEndStyle = { flex: 1, textAlign: 'center' };
-  const labelStyle = { fontSize: '28px' };
-  const numberStyle = { fontSize: '60px', margin: 0 };
+  const labelStyle = { fontSize: '28px',color:'#631B8D' };
+  const numberStyle = { fontSize: '70px', margin: 0, color:'#631B8D'};
   const lowerSectionStyle = {
     marginTop: '20px',
     gap: '20px',
@@ -437,7 +434,7 @@ function DashboardPage() {
   };
 
   const dashboardBtnStyle = {
-    backgroundImage: `url(${dashboardBtn})`,
+    backgroundColor: '#6D2593',
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     borderRadius: '16px',
