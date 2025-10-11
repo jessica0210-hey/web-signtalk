@@ -798,8 +798,7 @@ function DashboardPage() {
             </p>
           ) : (
             <p style={{ fontSize: '18px', textAlign: 'center', color: '#ddd', marginBottom: '10px' }}>
-              The system is currently in maintenance mode.
-              All services are temporarily unavailable <br />and will remain offline until the administrator reactivates the system.
+              All services will remain offline until the <br /> administrator reactivates the system.
             </p>
           )}
           <div style={{ textAlign: 'center' }}>

@@ -2,8 +2,16 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-   font-family: 'Alata', sans-serif;
+  font-family: 'Alata', sans-serif;
+  caret-color: transparent;
 }
+
+/* Re-enable cursor for actual text fields */
+input:focus,
+textarea:focus {
+  caret-color: auto;
+}
+
 
 html, body, #root {
   margin: 0;

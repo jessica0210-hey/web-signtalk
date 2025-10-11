@@ -551,8 +551,8 @@ function GenerateReports() {
                     cursor: "pointer",
                     background: 
                       hoveredItem === col.key 
-                        ? (selectedCols.includes(col.key) ? "#a66de0" : "#e8d5f7")
-                        : (selectedCols.includes(col.key) ? "#b77df1ff" : "white"),
+                        ? (selectedCols.includes(col.key) ? "#481872" : "#481872")
+                        : (selectedCols.includes(col.key) ? "#481872" : "white"),
                     fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
                     color: selectedCols.includes(col.key) ? "#fff" : "#000",
                     borderRadius: selectedCols.includes(col.key) ? "4px" : "0",
@@ -657,8 +657,8 @@ function GenerateReports() {
                       cursor: "pointer",
                       background: 
                         hoveredItem === dropdownCol.key 
-                          ? (selectedCols.includes(dropdownCol.key) ? "#a66de0" : "#e8d5f7")
-                          : (selectedCols.includes(dropdownCol.key) ? "#b77df1ff" : "white"),
+                          ? (selectedCols.includes(dropdownCol.key) ? "#481872" : "#e8d5f7")
+                          : (selectedCols.includes(dropdownCol.key) ? "#481872" : "white"),
                       fontWeight: selectedCols.includes(dropdownCol.key) ? "bold" : "normal",
                       color: selectedCols.includes(dropdownCol.key) ? "#fff" : "#000",
                       borderBottom: index === allColumns.length - 1 ? "none" : "1px solid #eee",
