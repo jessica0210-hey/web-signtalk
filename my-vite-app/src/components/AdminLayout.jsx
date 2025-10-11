@@ -202,7 +202,7 @@ function AdminLayout({ children, title }) {
     padding: '0 20px',
     backgroundColor: '#481872',
     backgroundPosition: 'center',
-    boxShadow: '0 4px 10px rgba(255, 255, 255, 0.3)',
+    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.3)',
     position: 'relative'
   };
 

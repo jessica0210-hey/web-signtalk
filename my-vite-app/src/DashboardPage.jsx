@@ -763,55 +763,56 @@ function DashboardPage() {
         </div>
         {/* System Status */}
         <div style={systemStatBgStyle}>
-          <p style={{ fontSize: '60px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' , marginTop: '20px'}}>SYSTEM STATUS</p>
+          <p style={{ fontSize: '50px', textAlign: 'center', fontWeight: 700, letterSpacing: '0.7px' , marginTop: '10px'}}>SYSTEM STATUS</p>
           <div style={{ textAlign: 'center'}}>
             <img 
+              id="systemStatusToggleBtn"
               src={statusIcon} 
               alt="Status Icon" 
+              onClick={handleActiveClick}
               style={{ 
                 width: '110px', 
                 height: '110px',
-                marginTop: '10px',
-                marginBottom: '10px',
+                marginTop: '20px',
+                marginBottom: '20px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                transform: 'scale(1) rotate(0deg)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'scale(1.15) rotate(15deg)';
+                //e.currentTarget.style.filter = 'brightness(1.2) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5))';
+                e.currentTarget.style.transition = 'all 0.3s ease';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                //e.currentTarget.style.filter = 'brightness(1)';
+                e.currentTarget.style.transition = 'all 0.3s ease';
               }}
             />
           </div>
           {isActive ? (
-            <p style={{ fontSize: '15px', textAlign: 'center', color: '#ddd'}}>
+            <p style={{ fontSize: '19px', textAlign: 'center', color: '#ddd', marginBottom: '10px' }}>
               Activating maintenance mode will <br /> make the system
               unavailable to all users.
             </p>
           ) : (
-            <p style={{ fontSize: '15px', textAlign: 'center', color: '#ddd'}}>
+            <p style={{ fontSize: '18px', textAlign: 'center', color: '#ddd', marginBottom: '10px' }}>
               The system is currently in maintenance mode.
               All services are temporarily unavailable <br />and will remain offline until the administrator reactivates the system.
             </p>
           )}
           <div style={{ textAlign: 'center' }}>
             <img 
-              id="systemStatusToggleBtn"
               src={isActive ? activeBtn : inactiveBtn}
               alt={isActive ? "Active" : "Inactive"}
-              onClick={handleActiveClick}
               style={{
-                cursor: 'pointer',
                 marginTop: '10px',
                 width: 'auto',
                 height: '50px',
                 maxWidth: '100%',
                 objectFit: 'contain',
-                transition: 'all 0.3s ease',
-                transform: 'scale(1)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px) scale(1.05)';
-                e.currentTarget.style.transition = 'all 0.3s ease';
-                e.currentTarget.style.filter = 'brightness(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
-                e.currentTarget.style.transition = 'all 0.3s ease';
-                e.currentTarget.style.filter = 'brightness(1)';
+                pointerEvents: 'none',
               }}
             />
           </div>
