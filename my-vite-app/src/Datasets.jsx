@@ -351,13 +351,20 @@ function Datasets() {
     setShowDeleteModal(true);
   };
 
+  const normalizeText = (text) => {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove all special characters including spaces
+    .trim();
+};
+
   const handleUpload = async () => {
     if (!selectedFile || !keyword) {
       showNotification('error', 'Please select a GIF and enter a keyword.');
       return;
     }
 
-    const keywordId = keyword.toLowerCase();
+    const keywordId = normalizeText(keyword);
 
     // Check if keyword already exists
     const existingItem = gif.find(item => item.keyword === keywordId);
@@ -381,6 +388,7 @@ function Datasets() {
       doc(firestore, "triggers", keywordId),
       {
         keyword: keywordId,
+        originalKeyword: keyword,   
         gifUrl: downloadURL,
       }
     );
