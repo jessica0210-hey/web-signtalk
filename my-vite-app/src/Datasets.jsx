@@ -1119,7 +1119,7 @@ const styles = {
     textAlign: 'center',
     marginTop: '20px',
     width: '700px',
-    height: '260px',
+    height: '280px',
     cursor: 'pointer',
     color: '#fff',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',   
@@ -1207,8 +1207,7 @@ const styles = {
 
   fileName: {
     display: "inline-block",
-    marginTop: "10px",
-    marginLeft: "-70px",
+    alignItems: "center",
     fontSize: "20px",
     color: "#ffffffff",
   },

@@ -492,7 +492,6 @@ function LoginWrapper() {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     animation: 'modalBounce 0.5s ease-out forwards',
-    border: '1px solid rgba(109, 37, 147, 0.1)'
   };
 
   const popupHeaderStyle = {
