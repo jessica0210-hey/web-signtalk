@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import AdminLayout from "./components/AdminLayout";
 import dropdownIcon from "./assets/dropdown.png";
 import generateReport from "./assets/generate_icon.png";
-import { firestore } from "./firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { firestore, auth } from "./firebase";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 
 // Add CSS animations for dropdown effects
 const dropdownAnimations = `
@@ -347,6 +347,7 @@ function GenerateReports() {
             <div class="header-text">
               <h1>${reportTitle}</h1>
               <p style="margin: 0; font-size: 12px;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+              <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #481872;">Printed by: ${adminName}</p>
             </div>
           </div>
           
@@ -383,8 +384,29 @@ function GenerateReports() {
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [adminName, setAdminName] = useState("Admin");
 
   const tableContainerRef = useRef(null);
+
+  // Fetch current admin's name
+  useEffect(() => {
+    const fetchAdminName = async () => {
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const userDoc = await getDoc(doc(firestore, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setAdminName(userData.name || "Admin");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching admin name:", error);
+        setAdminName("Admin");
+      }
+    };
+    fetchAdminName();
+  }, []);
 
   useEffect(() => {
     if (tableContainerRef.current) {

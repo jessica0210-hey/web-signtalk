@@ -2,14 +2,35 @@ import React, { useState, useRef, useEffect } from 'react';
 import AdminLayout from './components/AdminLayout';
 import filterIcon from './assets/dateIcon.png';
 import generateIcon from './assets/generate_icon.png';
-import { firestore } from './firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { firestore, auth } from './firebase';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 function Feedback() {
   const [feedbackData, setFeedbackData] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [loading, setLoading] = useState(true);
+  const [adminName, setAdminName] = useState("Admin");
   const dateInputRef = useRef(null);
+
+  // Fetch current admin's name
+  useEffect(() => {
+    const fetchAdminName = async () => {
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const userDoc = await getDoc(doc(firestore, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setAdminName(userData.name || "Admin");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching admin name:", error);
+        setAdminName("Admin");
+      }
+    };
+    fetchAdminName();
+  }, []);
 
   // Fetch feedback from Firestore
   useEffect(() => {
@@ -248,6 +269,7 @@ function Feedback() {
             <div class="header-text">
               <h1>FEEDBACK REPORT</h1>
               <p style="margin: 0;">Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+              <p style="margin: 5px 0 0 0; font-weight: bold; color: #481872;">Printed by: ${adminName}</p>
               ${selectedDate ? `<p class="print-date-filter">Filtered by date: ${selectedDate}</p>` : '<p style="margin: 5px 0;">All feedback records</p>'}
             </div>
           </div>
