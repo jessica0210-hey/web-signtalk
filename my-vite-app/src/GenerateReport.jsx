@@ -90,20 +90,14 @@ function GenerateReports() {
       // Prepare filtered users for each selected column
       const filteredUsersPerCol = selectedCols.map(getFilteredUsers);
       
-      // Find the max number of rows needed - only consider selected columns
-      const maxRows = selectedCols.length > 0 
-        ? Math.max(...filteredUsersPerCol.map(arr => arr.length), 0)
-        : userData.length; // Only use userData.length when no columns are selected
+      // Find the max number of rows needed
+      const maxRows = Math.max(...filteredUsersPerCol.map(arr => arr.length), 0);
       
-      // Generate headers - exclude "LIST OF USERS" if any columns are selected
-      const headers = [];
-      if (selectedCols.length === 0) {
-        headers.push('LIST OF USERS');
-      }
-      headers.push(...selectedCols.map(col => {
+      // Generate headers
+      const headers = selectedCols.map(col => {
         const colDef = allColumns.find(c => c.key === col);
         return colDef ? colDef.label : col;
-      }));
+      });
       
       let tableHTML = '<table><thead><tr>';
       headers.forEach(header => {
@@ -114,16 +108,6 @@ function GenerateReports() {
       // Generate rows
       for (let rowIdx = 0; rowIdx < maxRows; rowIdx++) {
         tableHTML += '<tr>';
-        
-        // Default list user - only if no columns are selected
-        if (selectedCols.length === 0) {
-          tableHTML += '<td>';
-          if (userData[rowIdx]) {
-            tableHTML += `<div><strong>${rowIdx + 1}. ${userData[rowIdx].name}</strong></div>`;
-            tableHTML += `<div style="font-size: 13px;">${userData[rowIdx].email}</div>`;
-          }
-          tableHTML += '</td>';
-        }
         
         // Selected filter columns
         selectedCols.forEach((col, colIdx) => {
@@ -394,7 +378,7 @@ function GenerateReports() {
     setOpenDropdown(null);
     setPrintRefresh((prev) => !prev); // force re-render
   };
-  const [selectedCols, setSelectedCols] = useState([]);
+  const [selectedCols, setSelectedCols] = useState(["AllUsers"]); // Default to "AllUsers"
   const [openDropdown, setOpenDropdown] = useState(null);
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -467,106 +451,6 @@ function GenerateReports() {
   // --- Render table headers ---
   const renderHeaders = () => (
     <tr>
-      {/* Default list header - only show if no columns are selected */}
-      {selectedCols.length === 0 && (
-        <th
-          style={{
-            background: "#481872",
-            color: "#fff",
-            width: "320px",
-            minWidth: "320px",
-            maxWidth: "320px",
-            position: "relative",
-            textAlign: "left",
-            padding: "12px 18px" // Added padding
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginLeft: '10px' }}>
-            <span className="print-header">LIST OF USERS</span>
-            {selectedCols.length === 0 && (
-                  <div style={{ padding: "0", display: "flex", alignItems: "center", opacity: 1, visibility: "visible" }}>
-                <button
-                  onClick={() => setOpenDropdown(openDropdown === "users" ? null : "users")}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
-                    marginRight: "8px"
-                  }}
-                >
-                  <img
-                    src={dropdownIcon}
-                    alt="dropdown"
-                    width="32"
-                    height="32"
-                    style={{ verticalAlign: "middle" }}
-                  />
-                </button>
-                <button
-                  id="btnPrintReport"
-                  onClick={handlePrint}
-                  style={{
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0
-                  }}
-                >
-                  <img
-                    src={generateReport}
-                    alt="print"
-                    width="32"
-                    height="32"
-                    style={{ verticalAlign: "middle" }}
-                  />
-                </button>
-              </div>
-            )}
-          </div>
-          {selectedCols.length === 0 && openDropdown === "users" && (
-            <div
-              className="dropdown-menu"
-              style={{
-                position: "absolute",
-                top: "48px",
-                right: "0px",
-                background: "white",
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                zIndex: 10,
-                minWidth: "200px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
-              }}
-            >
-              {allColumns.map((col) => (
-                <div
-                  key={col.key}
-                  className={`dropdown-item ${selectedCols.includes(col.key) ? 'selected' : ''}`}
-                  onClick={() => toggleColumn(col.key)}
-                  onMouseEnter={() => setHoveredItem(col.key)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  style={{
-                    padding: "12px 16px",
-                    cursor: "pointer",
-                    background: 
-                      hoveredItem === col.key 
-                        ? (selectedCols.includes(col.key) ? "#481872" : "#481872")
-                        : (selectedCols.includes(col.key) ? "#481872" : "white"),
-                    fontWeight: selectedCols.includes(col.key) ? "bold" : "normal",
-                    color: selectedCols.includes(col.key) ? "#fff" : "#000",
-                    borderRadius: selectedCols.includes(col.key) ? "4px" : "0",
-                    transform: hoveredItem === col.key ? "translateX(2px)" : "translateX(0)",
-                    transition: "all 0.15s ease"
-                  }}
-                >
-                  {col.label}
-                </div>
-              ))}
-            </div>
-          )}
-        </th>
-      )}
       {/* For each selected filter, add header */}
       {selectedCols.map((col, idx) => {
         const colDef = allColumns.find((c) => c.key === col);
@@ -686,7 +570,7 @@ function GenerateReports() {
     if (loading) {
       return (
         <tr>
-          <td colSpan={1 + selectedCols.length} style={{ textAlign: "center", padding: "40px" }}>
+          <td colSpan={selectedCols.length} style={{ textAlign: "center", padding: "40px" }}>
             Loading users...
           </td>
         </tr>
@@ -696,38 +580,12 @@ function GenerateReports() {
     // Prepare filtered users for each selected column
     const filteredUsersPerCol = selectedCols.map(getFilteredUsers);
 
-    // Find the max number of rows needed - only consider selected columns
-    const maxRows = selectedCols.length > 0 
-      ? Math.max(...filteredUsersPerCol.map(arr => arr.length), 8) // Ensure at least 8 rows to accommodate dropdown
-      : userData.length; // Only use userData.length when no columns are selected
+    // Find the max number of rows needed
+    const maxRows = Math.max(...filteredUsersPerCol.map(arr => arr.length), 8); // Ensure at least 8 rows to accommodate dropdown
 
     // Render rows per user index in each column
     return Array.from({ length: maxRows }).map((_, rowIdx) => (
       <tr key={rowIdx} id={`tableRow-${rowIdx}`}>
-        {/* Default list user - only show if no columns are selected */}
-        {selectedCols.length === 0 && (
-          <td
-            style={{
-              background: "#fff",
-              color: "#481872",
-              width: "380px",
-              minWidth: "380px",
-              maxWidth: "380px",
-              textAlign: "left",
-              padding: "12px 18px",
-              verticalAlign: "top",
-              height: "72px",
-              borderRight: "1px solid #eee"
-            }}
-          >
-            {userData[rowIdx] ? (
-              <div>
-                <div className="print-user-name"><b>{rowIdx + 1}.</b> {userData[rowIdx].name}</div>
-                <div style={{ fontSize: "13px" }}>{userData[rowIdx].email}</div>
-              </div>
-            ) : null}
-          </td>
-        )}
         {/* For each selected filter, add user */}
         {selectedCols.map((col, colIdx) => {
           const users = filteredUsersPerCol[colIdx];
